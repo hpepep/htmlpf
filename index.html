@@ -11,6 +11,21 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
         }
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable:hover {
+            background-color: #f1f5f9;
+        }
+        th.sortable::after {
+            content: ' ↕';
+            font-size: 0.75rem;
+            color: #94a3b8;
+            opacity: 0.6;
+        }
+        th.sort-asc::after { content: ' ↑'; color: #059669; opacity: 1; }
+        th.sort-desc::after { content: ' ↓'; color: #059669; opacity: 1; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -28,101 +43,117 @@
         </div>
     </header>
 
-    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
+    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow space-y-8">
         
-        <!-- Input & Summary Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Left Panel: File Upload/Download & Editor -->
-            <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col space-y-4">
-                <div>
-                    <h2 class="text-base font-semibold text-slate-900 mb-1">Manage Portfolio Data</h2>
-                    <p class="text-xs text-slate-500 mb-3">Upload your `.json` file, edit the raw text, or export the current dataset.</p>
-                    
-                    <!-- File Upload Input Area -->
-                    <label class="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-colors group mb-3">
-                        <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-2">
-                            <svg class="w-5 h-5 mb-1 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <p class="text-xs text-slate-600 font-medium"><span class="text-emerald-600">Click to upload JSON</span></p>
-                        </div>
-                        <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
-                    </label>
+        <!-- Section: Mutual Funds -->
+        <section class="space-y-6">
+            <div class="border-b border-slate-200 pb-3">
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Mutual Funds</h1>
+                <p class="text-xs text-slate-500">Real-time valuation breakdown of your equity and debt portfolio configurations.</p>
+            </div>
 
-                    <!-- Text Area Preview (Hardcoded with your exact values) -->
-                    <textarea id="jsonInput" class="w-full h-80 p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="JSON structure goes here..."></textarea>
+            <!-- Input & Summary Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                <!-- Left Panel: Collapsible Manage Portfolio Card -->
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden transition-all duration-300">
+                    <!-- Header Bar / Toggle Action Button -->
+                    <button onclick="toggleManageCard()" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span>Manage Portfolio Data</span>
+                        </div>
+                        <span id="toggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
+                    </button>
+                    
+                    <!-- Expandable Content Panel -->
+                    <div id="manageCardContent" class="p-4 space-y-4 transition-all duration-300 block">
+                        <div>
+                            <p class="text-xs text-slate-500 mb-3">Upload your custom `.json` file, modify data rows natively, or pull a backup.</p>
+                            
+                            <!-- Dropzone File Upload -->
+                            <label class="flex flex-col items-center justify-center w-full h-16 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-colors group mb-3">
+                                <div class="flex flex-col items-center justify-center text-center px-2">
+                                    <p class="text-xs text-slate-600 font-medium"><span class="text-emerald-600">Click to import portfolio JSON</span></p>
+                                </div>
+                                <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
+                            </label>
+
+                            <!-- Live Code Editor Mirror Area -->
+                            <textarea id="jsonInput" class="w-full h-48 p-2.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="JSON layout properties..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="downloadJson()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-all border border-slate-300 cursor-pointer text-center">
+                                Export JSON
+                            </button>
+                            <button onclick="calculatePortfolio()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-all shadow-xs cursor-pointer text-center">
+                                Recalculate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: KPI Statistics Indicators -->
+                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 h-fit">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between min-h-[120px]">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Value</span>
+                            <h3 id="totalValue" class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
+                        </div>
+                        <div class="text-xs text-emerald-600 font-medium mt-3 flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                            <span>Live AMFI asset stream mapped</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between min-h-[120px]">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tracked Allocations</span>
+                            <h3 id="totalFunds" class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">0</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3">Computed on-demand safely in sandbox.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sortable Interactive Table Matrix Grid -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-slate-200 px-5 py-4 flex items-center justify-between bg-slate-50/50">
+                    <h3 class="font-semibold text-sm text-slate-900">Asset Valuation Breakdowns</h3>
+                    <span class="text-xs text-slate-400" id="lastUpdated"></span>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="downloadJson()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-lg text-xs transition-all border border-slate-300 cursor-pointer text-center">
-                        Download JSON
-                    </button>
-                    <button onclick="calculatePortfolio()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 px-3 rounded-lg text-xs transition-all shadow-xs cursor-pointer text-center">
-                        Recalculate
-                    </button>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="mfTable">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs tracking-wider uppercase">
+                                <th class="py-3.5 px-5 font-medium sortable" onclick="sortTable(0, 'text')">Mutual Fund Name</th>
+                                <th class="py-3.5 px-5 font-medium text-center sortable" onclick="sortTable(1, 'number')">AMFI Code</th>
+                                <th class="py-3.5 px-5 font-medium text-right sortable" onclick="sortTable(2, 'number')">Units</th>
+                                <th class="py-3.5 px-5 font-medium text-right sortable" onclick="sortTable(3, 'number')">Current NAV</th>
+                                <th class="py-3.5 px-5 font-medium text-right sortable sort-desc" id="defaultSortCol" onclick="sortTable(4, 'number')">Current Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Initializing data frames...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <!-- Right Panel: KPI Cards Dashboard -->
-            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 h-fit">
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between min-h-[140px]">
-                    <div>
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Portfolio Value</span>
-                        <h3 id="totalValue" class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
-                    </div>
-                    <div class="text-xs text-emerald-600 font-medium mt-4 flex items-center space-x-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span>Live pricing engine active</span>
-                    </div>
-                </div>
-
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between min-h-[140px]">
-                    <div>
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
-                        <h3 id="totalFunds" class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">0</h3>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-4">Calculated completely locally in-browser via live AMFI feed.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Data Table Breakdown -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-            <div class="border-b border-slate-150 px-5 py-4 flex items-center justify-between bg-slate-50/50">
-                <h3 class="font-semibold text-sm text-slate-900">Current Asset Breakdown</h3>
-                <span class="text-xs text-slate-400" id="lastUpdated"></span>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs tracking-wider uppercase">
-                            <th class="py-3.5 px-5 font-medium">Mutual Fund Name</th>
-                            <th class="py-3.5 px-5 font-medium text-center">AMFI Code</th>
-                            <th class="py-3.5 px-5 font-medium text-right">Units</th>
-                            <th class="py-3.5 px-5 font-medium text-right">Current NAV</th>
-                            <th class="py-3.5 px-5 font-medium text-right">Current Value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
-                        <tr>
-                            <td colspan="5" class="py-12 text-center text-slate-400 text-xs">
-                                Loading your portfolio summary...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </section>
+        
     </main>
 
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-12">
-        <p>© 2026 · Premium Mutual Fund Valuation Matrix.</p>
+        <p>© 2026 · Portfolio Management Workspace Architecture.</p>
     </footer>
 
-    <!-- Application Scripting Logic -->
     <script>
-        // Exact dataset provided by you, completely hardcoded
-        const sampleStructure = {
+        // Data records exactly as provided
+        const initialDataset = {
             "mutual_funds": {
                 "119065": { "units": 1205.254 },
                 "118968": { "units": 217.665 },
@@ -138,32 +169,49 @@
             }
         };
 
-        // Write the hardcoded structure directly into the input layout on load
-        document.getElementById('jsonInput').value = JSON.stringify(sampleStructure, null, 4);
+        // Cache working memory variables globally to handle localized sort parameters easily
+        let localizedCacheRows = [];
+        let runningSortDirection = { colIndex: 4, order: 'desc' };
 
-        // Handle File Selection (Upload)
+        document.getElementById('jsonInput').value = JSON.stringify(initialDataset, null, 4);
+
+        // Toggle card utility
+        function toggleManageCard() {
+            const content = document.getElementById('manageCardContent');
+            const icon = document.getElementById('toggleIcon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                content.classList.add('block');
+                icon.innerText = "Shrink ↑";
+            } else {
+                content.classList.remove('block');
+                content.classList.add('hidden');
+                icon.innerText = "Expand ↓";
+            }
+        }
+
+        // Handle file imports safely
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (!parsed.mutual_funds) {
-                        alert("Malformed template: Make sure root contains key 'mutual_funds'.");
+                        alert("Malformed template structure missing root configuration indicator.");
                         return;
                     }
                     document.getElementById('jsonInput').value = JSON.stringify(parsed, null, 4);
                     calculatePortfolio(); 
                 } catch (err) {
-                    alert("Error parsing file contents. Please verify it is a valid JSON layout.");
+                    alert("Parsed stream contains parsing invalidations.");
                 }
             };
             reader.readAsText(file);
         }
 
-        // Handle File Generation (Download)
+        // Download local memory back up profiles 
         function downloadJson() {
             const currentText = document.getElementById('jsonInput').value;
             try {
@@ -178,11 +226,11 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             } catch (err) {
-                alert("Cannot download invalid JSON data structure.");
+                alert("Cannot download invalid JSON data structures.");
             }
         }
 
-        // Processing & Valuation Fetch Routine
+        // Primary processing stack calculation loop
         async function calculatePortfolio() {
             const jsonText = document.getElementById('jsonInput').value;
             const tableBody = document.getElementById('tableBody');
@@ -194,7 +242,7 @@
             try {
                 rawData = JSON.parse(jsonText);
             } catch (err) {
-                alert("Invalid JSON format. Please verify configuration keys are valid.");
+                alert("Invalid configuration markers found inside text dashboard parser engine.");
                 return;
             }
 
@@ -202,23 +250,21 @@
             const amfiCodes = Object.keys(fundsBlock);
 
             if (amfiCodes.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No entries found under 'mutual_funds'.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No entries found under active datasets.</td></tr>`;
                 totalValueEl.innerText = "₹0.00";
                 totalFundsEl.innerText = "0";
                 return;
             }
 
-            // Update UI into Loading state
-            tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Querying real-time AMFI data points...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Syncing dataset arrays directly with live AMFI valuations...</td></tr>`;
             
             let grandTotal = 0;
             let successCount = 0;
-            let rowsHtml = '';
+            localizedCacheRows = [];
 
             for (const amfi of amfiCodes) {
                 const item = fundsBlock[amfi];
                 if (!item || typeof item.units === 'undefined') continue;
-
                 const units = parseFloat(item.units) || 0;
 
                 try {
@@ -233,40 +279,110 @@
                         grandTotal += currentValue;
                         successCount++;
 
-                        rowsHtml += `
-                            <tr class="hover:bg-slate-50/70 transition-colors">
-                                <td class="py-4 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate" title="${schemeName}">${schemeName}</td>
-                                <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${amfi}</td>
-                                <td class="py-4 px-5 text-right font-mono text-slate-600">${units.toLocaleString('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
-                                <td class="py-4 px-5 text-right font-mono text-slate-600">₹${currentNav.toFixed(2)}</td>
-                                <td class="py-4 px-5 text-right font-semibold text-slate-900 font-mono">₹${currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            </tr>
-                        `;
-                    } else {
-                        throw new Error();
-                    }
+                        localizedCacheRows.push({
+                            name: schemeName,
+                            code: parseInt(amfi),
+                            units: units,
+                            nav: currentNav,
+                            value: currentValue,
+                            status: 'success'
+                        });
+                    } else { throw new Error(); }
                 } catch (e) {
-                    rowsHtml += `
-                        <tr class="bg-rose-50/40">
-                            <td class="py-4 px-5 text-rose-600 italic font-medium">Failed to look up scheme parameters</td>
-                            <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${amfi}</td>
-                            <td class="py-4 px-5 text-right font-mono text-slate-600">${units}</td>
-                            <td class="py-4 px-5 text-right text-rose-500">-</td>
-                            <td class="py-4 px-5 text-right text-rose-500 font-medium font-mono">Lookup Err</td>
-                        </tr>
-                    `;
+                    localizedCacheRows.push({
+                        name: `Lookup Exception: Details missing for [AMFI: ${amfi}]`,
+                        code: parseInt(amfi),
+                        units: units,
+                        nav: 0,
+                        value: 0,
+                        status: 'error'
+                    });
                 }
             }
 
-            tableBody.innerHTML = rowsHtml;
             totalValueEl.innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             totalFundsEl.innerText = successCount;
-            
             const timeMarker = new Date();
             lastUpdatedEl.innerText = `Last updated: ${timeMarker.toLocaleTimeString()}`;
+
+            // Execute automated sorting to mirror user expectation rules natively on run pipeline completion
+            applySort();
         }
 
-        // Run instantly on start using the hardcoded values
+        // Standard dynamic column rendering mechanics
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            let rowsHtml = '';
+
+            localizedCacheRows.forEach(row => {
+                if (row.status === 'success') {
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="py-4 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate" title="${row.name}">${row.name}</td>
+                            <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${row.code}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">${row.units.toLocaleString('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">₹${row.nav.toFixed(2)}</td>
+                            <td class="py-4 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>`;
+                } else {
+                    rowsHtml += `
+                        <tr class="bg-rose-50/40">
+                            <td class="py-4 px-5 text-rose-600 italic font-medium max-w-xs md:max-w-md truncate">${row.name}</td>
+                            <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${row.code}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">${row.units}</td>
+                            <td class="py-4 px-5 text-right text-rose-500">-</td>
+                            <td class="py-4 px-5 text-right text-rose-500 font-medium font-mono">Lookup Err</td>
+                        </tr>`;
+                }
+            });
+
+            tableBody.innerHTML = rowsHtml || `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No active data rows renderable.</td></tr>`;
+        }
+
+        // Logic routing to handle column reordering actions
+        function sortTable(columnIndex, dataType) {
+            if (runningSortDirection.colIndex === columnIndex) {
+                runningSortDirection.order = runningSortDirection.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                runningSortDirection.colIndex = columnIndex;
+                runningSortDirection.order = 'desc'; // Default back to clean descending flows on alternate headers
+            }
+
+            // Standardize visual feedback marker shifts inside HTML tables smoothly
+            const headers = document.querySelectorAll('#mfTable th');
+            headers.forEach((th, idx) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (idx === columnIndex) {
+                    th.classList.add(runningSortDirection.order === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            applySort(dataType);
+        }
+
+        // Data array modifier sorting calculations 
+        function applySort(dataType = 'number') {
+            const idx = runningSortDirection.colIndex;
+            const dirMultiplier = runningSortDirection.order === 'asc' ? 1 : -1;
+
+            // Map layout parameter indexes directly to key tracking properties
+            const propsMapping = ['name', 'code', 'units', 'nav', 'value'];
+            const targetProp = propsMapping[idx];
+
+            localizedCacheRows.sort((a, b) => {
+                let valA = a[targetProp];
+                let valB = b[targetProp];
+
+                if (dataType === 'text') {
+                    return valA.toString().localeCompare(valB.toString()) * dirMultiplier;
+                } else {
+                    return (valA - valB) * dirMultiplier;
+                }
+            });
+
+            renderTable();
+        }
+
         window.addEventListener('DOMContentLoaded', calculatePortfolio);
     </script>
 </body>
