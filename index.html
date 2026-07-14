@@ -48,8 +48,8 @@
                         <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
                     </label>
 
-                    <!-- Text Area Preview -->
-                    <textarea id="jsonInput" class="w-full h-64 p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="JSON structure goes here..."></textarea>
+                    <!-- Text Area Preview (Hardcoded with your exact values) -->
+                    <textarea id="jsonInput" class="w-full h-80 p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="JSON structure goes here..."></textarea>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
@@ -106,7 +106,7 @@
                     <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
                         <tr>
                             <td colspan="5" class="py-12 text-center text-slate-400 text-xs">
-                                Upload your portfolio file or click "Recalculate" to refresh values.
+                                Loading your portfolio summary...
                             </td>
                         </tr>
                     </tbody>
@@ -121,7 +121,7 @@
 
     <!-- Application Scripting Logic -->
     <script>
-        // Default the payload exactly as requested
+        // Exact dataset provided by you, completely hardcoded
         const sampleStructure = {
             "mutual_funds": {
                 "119065": { "units": 1205.254 },
@@ -138,7 +138,7 @@
             }
         };
 
-        // Initialize text view with correctly formatted structure
+        // Write the hardcoded structure directly into the input layout on load
         document.getElementById('jsonInput').value = JSON.stringify(sampleStructure, null, 4);
 
         // Handle File Selection (Upload)
@@ -167,7 +167,6 @@
         function downloadJson() {
             const currentText = document.getElementById('jsonInput').value;
             try {
-                // Ensure text fields map correctly to structures before exporting
                 JSON.parse(currentText);
                 const blob = new Blob([currentText], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
@@ -267,6 +266,7 @@
             lastUpdatedEl.innerText = `Last updated: ${timeMarker.toLocaleTimeString()}`;
         }
 
+        // Run instantly on start using the hardcoded values
         window.addEventListener('DOMContentLoaded', calculatePortfolio);
     </script>
 </body>
