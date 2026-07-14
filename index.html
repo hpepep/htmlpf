@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mutual Fund Valuation Dashboard</title>
-    <!-- Tailwind CSS for sleek styling -->
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -31,47 +31,57 @@
 
     <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
         
-        <!-- Intro & Input Section -->
+        <!-- Input & Summary Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            
+            <!-- Left Panel: File Upload & Editor -->
+            <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col space-y-4">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900 mb-1">Input Your Holdings</h2>
-                    <p class="text-xs text-slate-500 mb-4">Paste your mutual fund data below in a JSON format containing the AMFI code and units.</p>
+                    <h2 class="text-base font-semibold text-slate-900 mb-1">Upload Portfolio</h2>
+                    <p class="text-xs text-slate-500 mb-3">Upload your `.json` file or edit the raw text below.</p>
                     
-                    <textarea id="jsonInput" class="w-full h-48 p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder='[
-  { "amfi_code": "119598", "units": 150.25 },
-  { "amfi_code": "102885", "units": 84.50 }
-]'></textarea>
+                    <!-- File Upload Input Area -->
+                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-colors group mb-3">
+                        <div class="flex flex-col items-center justify-center pt-4 pb-4 text-center px-2">
+                            <svg class="w-6 h-6 mb-1 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p class="text-xs text-slate-600 font-medium"><span class="text-emerald-600">Click to upload</span> or drag and drop</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
+                    </label>
+
+                    <!-- Text Area fall-back / preview -->
+                    <textarea id="jsonInput" class="w-full h-40 p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="JSON structure goes here..."></textarea>
                 </div>
-                <button onclick="calculatePortfolio()" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-all shadow-xs cursor-pointer text-center">
+                
+                <button onclick="calculatePortfolio()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-all shadow-xs cursor-pointer text-center">
                     Fetch Live Valuation
                 </button>
             </div>
 
-            <!-- Dashboard Summary Card Indicators -->
-            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between">
+            <!-- Right Panel: KPI Cards Dashboard -->
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 h-fit">
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between min-h-[140px]">
                     <div>
                         <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Portfolio Value</span>
                         <h3 id="totalValue" class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
                     </div>
                     <div class="text-xs text-emerald-600 font-medium mt-4 flex items-center space-x-1">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span>Live NAV pricing connected</span>
+                        <span>Live pricing engine active</span>
                     </div>
                 </div>
 
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between">
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between min-h-[140px]">
                     <div>
                         <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
                         <h3 id="totalFunds" class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">0</h3>
                     </div>
-                    <p class="text-xs text-slate-500 mt-4">Calculations are run completely in your browser window.</p>
+                    <p class="text-xs text-slate-500 mt-4">Calculated completely locally in-browser.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Data Table Section -->
+        <!-- Data Table Breakdown -->
         <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div class="border-b border-slate-150 px-5 py-4 flex items-center justify-between bg-slate-50/50">
                 <h3 class="font-semibold text-sm text-slate-900">Current Asset Breakdown</h3>
@@ -92,7 +102,7 @@
                     <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
                         <tr>
                             <td colspan="5" class="py-12 text-center text-slate-400 text-xs">
-                                Enter your holdings JSON and click "Fetch Live Valuation" to populate dashboard.
+                                Upload your portfolio file or click "Fetch Live Valuation" to see current allocations.
                             </td>
                         </tr>
                     </tbody>
@@ -105,15 +115,47 @@
         <p>© 2026 · Built with clean, real-time financial tracking architecture.</p>
     </footer>
 
-    <!-- Core App Logic -->
+    <!-- Application Scripting Logic -->
     <script>
-        // Set sample data on initial load
-        document.getElementById('jsonInput').value = JSON.stringify([
-            { "amfi_code": "119598", "units": 245.520 },
-            { "amfi_code": "102885", "units": 112.850 },
-            { "amfi_code": "120503", "units": 560.100 }
-        ], null, 2);
+        // Seed the system with the exact JSON structure provided by the user
+        const sampleStructure = {
+            "mutual_funds": {
+                "119065": { "units": 1205.254 },
+                "118968": { "units": 217.665 },
+                "119060": { "units": 137.0 },
+                "119062": { "units": 6866.317 },
+                "119018": { "units": 155.311 },
+                "130498": { "units": 564.045 },
+                "118989": { "units": 3055.914 },
+                "118935": { "units": 1302.234 },
+                "141841": { "units": 1830.872 },
+                "120684": { "units": 15665.079 },
+                "122639": { "units": 21102.94 }
+            }
+        };
 
+        // Initialize user box with sample structure
+        document.getElementById('jsonInput').value = JSON.stringify(sampleStructure, null, 4);
+
+        // Handle File Selection
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    document.getElementById('jsonInput').value = JSON.stringify(parsed, null, 4);
+                    calculatePortfolio(); // Auto-calculate upon clean file drops
+                } catch (err) {
+                    alert("Error parsing file contents. Please verify it is a valid JSON layout.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Processing & Valuation Fetch Routine
         async function calculatePortfolio() {
             const jsonText = document.getElementById('jsonInput').value;
             const tableBody = document.getElementById('tableBody');
@@ -121,30 +163,38 @@
             const totalFundsEl = document.getElementById('totalFunds');
             const lastUpdatedEl = document.getElementById('lastUpdated');
 
-            let holdings;
+            let rawData;
             try {
-                holdings = JSON.parse(jsonText);
-                if (!Array.isArray(holdings)) throw new Error("JSON must be a list array.");
+                rawData = JSON.parse(jsonText);
             } catch (err) {
-                alert("Invalid JSON data format. Please make sure it's valid JSON array.");
+                alert("Invalid JSON data format. Please check for proper formatting markers.");
                 return;
             }
 
-            // Clear layout and show loading
-            tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Fetching live data from AMFI servers...</td></tr>`;
+            // Target the user's explicit object block structure layout
+            const fundsBlock = rawData.mutual_funds || rawData; 
+            const amfiCodes = Object.keys(fundsBlock);
+
+            if (amfiCodes.length === 0) {
+                alert("No mutual fund mappings or data entries detected.");
+                return;
+            }
+
+            // Update UI into Loading state
+            tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Querying real-time AMFI data points...</td></tr>`;
             
             let grandTotal = 0;
             let successCount = 0;
             let rowsHtml = '';
 
-            for (const asset of holdings) {
-                const amfi = asset.amfi_code?.toString().trim();
-                const units = parseFloat(asset.units) || 0;
+            // Run sequential requests to map tracking lines cleanly
+            for (const amfi of amfiCodes) {
+                const item = fundsBlock[amfi];
+                if (!item || typeof item.units === 'undefined') continue;
 
-                if (!amfi) continue;
+                const units = parseFloat(item.units) || 0;
 
                 try {
-                    // Fetch live data directly from the public open-source Indian Mutual Fund API
                     const response = await fetch(`https://api.mfapi.in/mf/${amfi}`);
                     const json = await response.json();
 
@@ -160,37 +210,37 @@
                             <tr class="hover:bg-slate-50/70 transition-colors">
                                 <td class="py-4 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate" title="${schemeName}">${schemeName}</td>
                                 <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${amfi}</td>
-                                <td class="py-4 px-5 text-right font-mono text-slate-600">${units.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}</td>
+                                <td class="py-4 px-5 text-right font-mono text-slate-600">${units.toLocaleString('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
                                 <td class="py-4 px-5 text-right font-mono text-slate-600">₹${currentNav.toFixed(2)}</td>
                                 <td class="py-4 px-5 text-right font-semibold text-slate-900 font-mono">₹${currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             </tr>
                         `;
                     } else {
-                        throw new Error("Invalid fund code data returned.");
+                        throw new Error();
                     }
                 } catch (e) {
                     rowsHtml += `
                         <tr class="bg-rose-50/40">
-                            <td class="py-4 px-5 text-rose-600 italic font-medium">Failed to retrieve data for AMFI Code: ${amfi}</td>
+                            <td class="py-4 px-5 text-rose-600 italic font-medium">Failed to look up scheme parameters</td>
                             <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${amfi}</td>
                             <td class="py-4 px-5 text-right font-mono text-slate-600">${units}</td>
                             <td class="py-4 px-5 text-right text-rose-500">-</td>
-                            <td class="py-4 px-5 text-right text-rose-500 font-medium">Error</td>
+                            <td class="py-4 px-5 text-right text-rose-500 font-medium font-mono">Lookup Err</td>
                         </tr>
                     `;
                 }
             }
 
-            // Render final states
-            tableBody.innerHTML = rowsHtml || `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No valid data processed.</td></tr>`;
+            // Write updates out cleanly to components
+            tableBody.innerHTML = rowsHtml;
             totalValueEl.innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             totalFundsEl.innerText = successCount;
             
-            const now = new Date();
-            lastUpdatedEl.innerText = `Last calculated: ${now.toLocaleTimeString()}`;
+            const timeMarker = new Date();
+            lastUpdatedEl.innerText = `Last updated: ${timeMarker.toLocaleTimeString()}`;
         }
 
-        // Run calculation instantly on boot with the sample data
+        // Trigger valuation calculation instantly using the initial data state 
         window.addEventListener('DOMContentLoaded', calculatePortfolio);
     </script>
 </body>
