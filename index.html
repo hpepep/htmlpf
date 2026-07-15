@@ -4,276 +4,1054 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retirement Portfolio Tracker</title>
-    <!-- Tailwind CSS for sleek UI styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable:hover {
+            background-color: #f1f5f9;
+        }
+        th.sortable::after {
+            content: ' ↕';
+            font-size: 0.75rem;
+            color: #94a3b8;
+            opacity: 0.6;
+        }
+        th.sort-asc::after { content: ' ↑'; color: #059669; opacity: 1; }
+        th.sort-desc::after { content: ' ↓'; color: #059669; opacity: 1; }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-6">
-        
-        <!-- Header Section -->
-        <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
-                    Retirement Portfolio Tracker
-                </h1>
-                <p class="text-gray-400 text-sm mt-1">Track, manage, and back up your complete lifetime nest egg.</p>
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">₹</div>
+                <span class="font-bold text-lg tracking-tight text-slate-900">Retirement<span class="text-emerald-600">Planner</span></span>
             </div>
-            <div class="mt-4 sm:mt-0 px-4 py-2 bg-gray-800 rounded-xl border border-gray-700">
-                <span class="text-xs text-gray-400 block uppercase font-bold tracking-wider">Total Portfolio Value</span>
-                <span id="globalPortfolioTotal" class="text-2xl font-black text-teal-400">$0.00</span>
+            <!-- Global JSON Upload/Download Utility -->
+            <div class="flex items-center space-x-2">
+                <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-300 cursor-pointer transition-colors">
+                    📥 Import State JSON
+                    <input type="file" accept=".json" class="hidden" onchange="importGlobalState(event)" />
+                </label>
+                <button onclick="exportGlobalState()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
+                    📤 Export State JSON
+                </button>
+                <div class="text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1.5 rounded-full border border-slate-200">
+                    🔒 Private & Local
+                </div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- 6-TAB NAVIGATION BAR -->
-        <nav class="flex flex-wrap gap-2 border-b border-gray-800 pb-3 mb-6">
-            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-teal-600 text-white shadow-md">Overview</button>
-            <button onclick="switchTab('mf')" id="tab-mf" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200">Mutual Funds (MF)</button>
-            <button onclick="switchTab('stocks')" id="tab-stocks" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200">Stocks</button>
-            <button onclick="switchTab('gold')" id="tab-gold" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200">Gold</button>
-            <button onclick="switchTab('fixedincome')" id="tab-fixedincome" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200">Fixed Income / PPF</button>
-            <button onclick="switchTab('cash')" id="tab-cash" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200">Cash / Bank</button>
-        </nav>
+    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
 
-        <!-- ========================================== -->
-        <!-- TAB 1: OVERVIEW SECTION                    -->
-        <!-- ========================================== -->
-        <section id="content-overview" class="tab-content space-y-6">
-            
-            <!-- GLOBAL BACKUP PANEL (Now enables complete dataset management) -->
-            <div class="p-5 bg-gradient-to-r from-gray-800 via-gray-800 to-gray-850 rounded-xl border border-gray-700 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <!-- GLOBAL CONFIGURATION CARD & OVERVIEW CARDS -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <!-- Global Parameters -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                    <h3 class="text-lg font-bold text-gray-100 flex items-center gap-2">
-                        📦 Complete Dataset Backup & Restore
-                    </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">
-                        Download the full state across **all 6 tabs** as a single JSON file. Edit offline or reload it anytime to restore your data.
-                    </p>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Plan Horizon</span>
+                    <div class="mt-3 space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Retirement Year</label>
+                            <input type="number" id="retirementYear" value="2043" onchange="triggerGlobalRecalculation()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium text-slate-800" />
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-3 w-full md:w-auto">
-                    <!-- Global Download -->
-                    <button onclick="exportCompleteDataset()" class="flex-1 md:flex-initial px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition shadow-md whitespace-nowrap">
-                        Download Complete JSON
+                <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjusting retirement horizon recalculates all cash flow projection tables dynamically.</p>
+            </div>
+
+            <!-- Aggregate Portfolio Value -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cumulative Portfolio (Current)</span>
+                    <h3 id="cumulativeValue" class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
+                </div>
+                <div class="text-[11px] text-emerald-600 font-medium mt-4 flex items-center space-x-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                    <span>Consolidating all assets</span>
+                </div>
+            </div>
+
+            <!-- Future Projected Value at Retirement -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected (Retirement Yr)</span>
+                    <h3 id="futureProjectedValue" class="text-2xl font-bold text-slate-950 mt-2 tracking-tight">₹0.00</h3>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-4">Based on respective asset interest rates.</p>
+            </div>
+
+            <!-- Active Assets breakdown mini bar graph/KPI -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Quick Asset Allocation</span>
+                    <div class="space-y-1.5 mt-2 text-xs">
+                        <div class="flex justify-between"><span>MF:</span> <span class="font-mono font-medium" id="allocMF">₹0</span></div>
+                        <div class="flex justify-between"><span>EPF:</span> <span class="font-mono font-medium" id="allocEPF">₹0</span></div>
+                        <div class="flex justify-between"><span>NPS:</span> <span class="font-mono font-medium" id="allocNPS">₹0</span></div>
+                        <div class="flex justify-between"><span>Liq & Other:</span> <span class="font-mono font-medium" id="allocLiqOther">₹0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6 TABS NAVIGATION BAR -->
+        <div class="border-b border-slate-200 bg-white rounded-xl p-1 shadow-2xs border flex flex-wrap gap-1">
+            <button onclick="switchTab('planTab')" id="btn-planTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs">
+                Retirement Plan
+            </button>
+            <button onclick="switchTab('mfTab')" id="btn-mfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                Mutual Funds
+            </button>
+            <button onclick="switchTab('epfTab')" id="btn-epfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                EPF
+            </button>
+            <button onclick="switchTab('npsTab')" id="btn-npsTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                NPS
+            </button>
+            <button onclick="switchTab('liqTab')" id="btn-liqTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                Liquid
+            </button>
+            <button onclick="switchTab('otherTab')" id="btn-otherTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                Other
+            </button>
+        </div>
+
+        <!-- -------------------- TAB CONTENT: RETIREMENT PLAN -------------------- -->
+        <div id="planTab" class="tab-pane space-y-6">
+            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-slate-200 px-5 py-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900">Expected Corpus Projection (2026 - 2043)</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Calculated based on starting values compounded annually (MF: 10%, EPF: 7%, NPS: 9%)</p>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-semibold border border-emerald-100">
+                        Target Year: 2043
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                <th class="py-3 px-5">Year</th>
+                                <th class="py-3 px-5 text-right">Mutual Funds (10%)</th>
+                                <th class="py-3 px-5 text-right">EPF (7%)</th>
+                                <th class="py-3 px-5 text-right">NPS (9%)</th>
+                                <th class="py-3 px-5 text-right bg-emerald-50/40 text-emerald-800 font-semibold">Total Corpus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planTableBody" class="divide-y divide-slate-100 text-sm font-mono">
+                            <!-- Dynamic Rows Go Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- -------------------- TAB CONTENT: MUTUAL FUNDS -------------------- -->
+        <div id="mfTab" class="tab-pane hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <!-- Collapsible Control Card -->
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                    <button onclick="toggleManageCard()" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
+                        <span class="flex items-center space-x-2">📂 <span>Manage Portfolio Data</span></span>
+                        <span id="toggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
                     </button>
-                    <!-- Global Upload -->
-                    <input type="file" id="globalJsonUpload" accept=".json" class="hidden" onchange="importCompleteDataset(event)" />
-                    <button onclick="document.getElementById('globalJsonUpload').click()" class="flex-1 md:flex-initial px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition shadow-md whitespace-nowrap">
-                        Upload Complete JSON
-                    </button>
+                    
+                    <div id="manageCardContent" class="p-4 space-y-4">
+                        <div>
+                            <p class="text-xs text-slate-500 mb-3">Upload your custom `.json` file, modify data rows, or pull a local backup.</p>
+                            <label class="flex flex-col items-center justify-center w-full h-14 border border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors mb-3">
+                                <span class="text-xs text-emerald-600 font-medium">Click to upload JSON</span>
+                                <input type="file" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
+                            </label>
+                            <textarea id="jsonInput" class="w-full h-48 p-2.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="downloadJson()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-all border border-slate-300 cursor-pointer">Export JSON</button>
+                            <button onclick="calculatePortfolio()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer">Recalculate</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live MF Valuation Summary Panel -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mutual Fund Value</span>
+                            <h3 id="mfCurrentVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
+                            <h4 id="totalFunds" class="text-xl font-bold text-slate-900">0</h4>
+                            <!-- Timestamp Placeholder -->
+                            <p id="lastUpdated" class="text-[10px] text-slate-400 mt-1 font-mono"></p>
+                        </div>
+                    </div>
+
+                    <!-- Asset Grid Table -->
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse" id="mfTable">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                        <th class="py-3 px-4 font-medium sortable" onclick="sortMFTable(0, 'text')">Name</th>
+                                        <th class="py-3 px-4 font-medium text-center sortable" onclick="sortMFTable(1, 'number')">AMFI</th>
+                                        <th class="py-3 px-4 font-medium text-right sortable" onclick="sortMFTable(2, 'number')">Units</th>
+                                        <th class="py-3 px-4 font-medium text-right sortable" onclick="sortMFTable(3, 'number')">NAV</th>
+                                        <th class="py-3 px-4 font-medium text-right sortable sort-desc" id="defaultMFSort" onclick="sortMFTable(4, 'number')">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                                    <tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">Initializing...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Asset Allocation Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="p-4 bg-gray-800 rounded-xl border border-gray-750">
-                    <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Mutual Funds</span>
-                    <div id="summary-mf" class="text-xl font-bold mt-1 text-gray-100">$0.00</div>
+        <!-- -------------------- TAB CONTENT: EPF -------------------- -->
+        <div id="epfTab" class="tab-pane hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <h3 class="font-semibold text-sm text-slate-900">EPF Parameters</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
+                            <input type="number" id="epfCurrentVal" value="6600000" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                            <input type="number" id="epfCurrentYear" value="2026" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                    </div>
                 </div>
-                <div class="p-4 bg-gray-800 rounded-xl border border-gray-750">
-                    <span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Stocks</span>
-                    <div id="summary-stocks" class="text-xl font-bold mt-1 text-gray-100">$0.00</div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="epfHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹66,00,000</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="epfHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
+                            <span class="font-semibold text-xs text-slate-900">EPF Compounding Timeline Projections</span>
+                        </div>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                        <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-center w-32">Interest (%)</th>
+                                        <th class="py-3 px-5 text-right">Interest Earned</th>
+                                        <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="epfTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-4 bg-gray-800 rounded-xl border border-gray-750">
-                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Gold</span>
-                    <div id="summary-gold" class="text-xl font-bold mt-1 text-gray-100">$0.00</div>
+            </div>
+        </div>
+
+        <!-- -------------------- TAB CONTENT: NPS -------------------- -->
+        <div id="npsTab" class="tab-pane hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <h3 class="font-semibold text-sm text-slate-900">NPS Parameters</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
+                            <input type="number" id="npsCurrentVal" value="1900000" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                            <input type="number" id="npsCurrentYear" value="2026" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                    </div>
                 </div>
-                <div class="p-4 bg-gray-800 rounded-xl border border-gray-750">
-                    <span class="text-xs font-bold text-red-400 uppercase tracking-wider">Fixed Income / PPF</span>
-                    <div id="summary-fixedincome" class="text-xl font-bold mt-1 text-gray-100">$0.00</div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="npsHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹19,00,000</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="npsHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
+                            <span class="font-semibold text-xs text-slate-900">NPS Compounding Timeline Projections</span>
+                        </div>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                        <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-center w-32">Interest (%)</th>
+                                        <th class="py-3 px-5 text-right">Interest Earned</th>
+                                        <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="npsTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-4 bg-gray-800 rounded-xl border border-gray-750">
-                    <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">Cash / Bank</span>
-                    <div id="summary-cash" class="text-xl font-bold mt-1 text-gray-100">$0.00</div>
+            </div>
+        </div>
+
+        <!-- -------------------- TAB CONTENT: LIQUID -------------------- -->
+        <div id="liqTab" class="tab-pane hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <h3 class="font-semibold text-sm text-slate-900">Liquid Compound Parameters</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
+                            <input type="number" id="liqCurrentVal" value="0" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                                <input type="number" id="liqCurrentYear" value="2026" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
+                                <input type="number" step="0.1" id="liqInterest" value="6" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="liqHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="liqHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
+                            <span class="font-semibold text-xs text-slate-900">Liquid Asset Timeline Projections</span>
+                        </div>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                        <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-right">Interest Earned</th>
+                                        <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="liqTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- ========================================== -->
-        <!-- ASSET TABS 2 TO 6                          -->
-        <!-- ========================================== -->
-        
-        <!-- TAB 2: MUTUAL FUNDS -->
-        <section id="content-mf" class="tab-content hidden space-y-4">
-            <div class="p-6 bg-gray-800 rounded-xl border border-gray-770">
-                <h2 class="text-xl font-bold text-blue-400 mb-2">Mutual Funds Portfolio</h2>
-                <p class="text-gray-400 text-sm mb-4">Manage your index and active equity mutual funds here.</p>
-                <textarea id="data-mf" class="w-full h-48 bg-gray-900 text-emerald-400 font-mono p-3 rounded-lg border border-gray-700 text-sm focus:outline-none focus:border-blue-500" oninput="updateStateFromUI('mutualFunds', this.value)"></textarea>
+        <!-- -------------------- TAB CONTENT: OTHER -------------------- -->
+        <div id="otherTab" class="tab-pane hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <h3 class="font-semibold text-sm text-slate-900">Other Asset Compound Parameters</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
+                            <input type="number" id="otherCurrentVal" value="0" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                                <input type="number" id="otherCurrentYear" value="2026" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
+                                <input type="number" step="0.1" id="otherInterest" value="6" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="otherHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="otherHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
+                            <span class="font-semibold text-xs text-slate-900">Other Asset Timeline Projections</span>
+                        </div>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                        <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-right">Interest Earned</th>
+                                        <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="otherTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <!-- TAB 3: STOCKS -->
-        <section id="content-stocks" class="tab-content hidden space-y-4">
-            <div class="p-6 bg-gray-800 rounded-xl border border-gray-770">
-                <h2 class="text-xl font-bold text-purple-400 mb-2">Direct Equities / Stocks</h2>
-                <p class="text-gray-400 text-sm mb-4">Manage your direct stock market equity holdings.</p>
-                <textarea id="data-stocks" class="w-full h-48 bg-gray-900 text-emerald-400 font-mono p-3 rounded-lg border border-gray-700 text-sm focus:outline-none focus:border-purple-500" oninput="updateStateFromUI('stocks', this.value)"></textarea>
-            </div>
-        </section>
+    </main>
 
-        <!-- TAB 4: GOLD -->
-        <section id="content-gold" class="tab-content hidden space-y-4">
-            <div class="p-6 bg-gray-800 rounded-xl border border-gray-770">
-                <h2 class="text-xl font-bold text-amber-400 mb-2">Gold Holdings</h2>
-                <p class="text-gray-400 text-sm mb-4">Track digital gold, SGBs, or physical gold values.</p>
-                <textarea id="data-gold" class="w-full h-48 bg-gray-900 text-emerald-400 font-mono p-3 rounded-lg border border-gray-700 text-sm focus:outline-none focus:border-amber-500" oninput="updateStateFromUI('gold', this.value)"></textarea>
-            </div>
-        </section>
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-12">
+        <p>© 2026 · Integrated Retirement Portfolio Tracker Workspace.</p>
+    </footer>
 
-        <!-- TAB 5: FIXED INCOME / PPF -->
-        <section id="content-fixedincome" class="tab-content hidden space-y-4">
-            <div class="p-6 bg-gray-800 rounded-xl border border-gray-770">
-                <h2 class="text-xl font-bold text-red-400 mb-2">Fixed Income & PPF Balance</h2>
-                <p class="text-gray-400 text-sm mb-4">Track low-risk debt instruments, corporate deposits, and PPF assets.</p>
-                <textarea id="data-fixedincome" class="w-full h-48 bg-gray-900 text-emerald-400 font-mono p-3 rounded-lg border border-gray-700 text-sm focus:outline-none focus:border-red-500" oninput="updateStateFromUI('fixedIncome', this.value)"></textarea>
-            </div>
-        </section>
-
-        <!-- TAB 6: CASH / BANK -->
-        <section id="content-cash" class="tab-content hidden space-y-4">
-            <div class="p-6 bg-gray-800 rounded-xl border border-gray-770">
-                <h2 class="text-xl font-bold text-teal-400 mb-2">Cash & Bank Balances</h2>
-                <p class="text-gray-400 text-sm mb-4">High-liquidity savings accounts and emergency fund cash layers.</p>
-                <textarea id="data-cash" class="w-full h-48 bg-gray-900 text-emerald-400 font-mono p-3 rounded-lg border border-gray-700 text-sm focus:outline-none focus:border-teal-500" oninput="updateStateFromUI('cashAndBank', this.value)"></textarea>
-            </div>
-        </section>
-
-    </div>
-
-    <!-- ========================================== -->
-    <!-- CORE JAVASCRIPT STATE ENGINE               -->
-    <!-- ========================================== -->
     <script>
-        // Central data structure containing state for all 5 asset tabs
-        let retirementMasterDataset = {
-            mutualFunds: [
-                { fundName: "Nifty 50 Index Fund", currentBalance: 250000 },
-                { fundName: "Parag Parikh Flexi Cap", currentBalance: 180000 }
-            ],
-            stocks: [
-                { ticker: "RELIANCE", amount: 95000 },
-                { ticker: "TCS", amount: 64000 }
-            ],
-            gold: [
-                { assetType: "Sovereign Gold Bond 2023", currentBalance: 120000 }
-            ],
-            fixedIncome: [
-                { type: "Public Provident Fund (PPF)", currentBalance: 450000 },
-                { type: "HDFC Bank FD", currentBalance: 200000 }
-            ],
-            cashAndBank: [
-                { institution: "SBI Savings Account", currentBalance: 45000 },
-                { institution: "Emergency Cash Stash", currentBalance: 25000 }
-            ]
+        // Global variables holding calculated sums
+        let globalMFCurrent = 0;
+        let globalEPFCurrent = 6600000;
+        let globalNPSCurrent = 1900000;
+        let globalLiqCurrent = 0;
+        let globalOtherCurrent = 0;
+
+        let globalMFFuture = 0;
+        let globalEPFFuture = 0;
+        let globalNPSFuture = 0;
+        let globalLiqFuture = 0;
+        let globalOtherFuture = 0;
+
+        // Custom local cache maps for storing year-specific user inputs
+        let epfInterestRates = {}; // Format: { year: rate }
+        let npsInterestRates = {}; // Format: { year: rate }
+
+        // Raw local datasets for parsing
+        const initialDataset = {
+            "mutual_funds": {
+                "119065": { "units": 1205.254 },
+                "118968": { "units": 217.665 },
+                "119060": { "units": 137.0 },
+                "119062": { "units": 6866.317 },
+                "119018": { "units": 155.311 },
+                "130498": { "units": 564.045 },
+                "118989": { "units": 3055.914 },
+                "118935": { "units": 1302.234 },
+                "141841": { "units": 1830.872 },
+                "120684": { "units": 15665.079 },
+                "122639": { "units": 21102.94 }
+            }
         };
 
-        // Tab Switching Engine
-        function switchTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            // Remove active style from all navigation buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-teal-600', 'text-white', 'shadow-md');
-                btn.classList.add('bg-gray-800', 'text-gray-400');
+        let localizedCacheRows = [];
+        let runningSortDirection = { colIndex: 4, order: 'desc' };
+
+        document.getElementById('jsonInput').value = JSON.stringify(initialDataset, null, 4);
+
+        // Core UI Navigation Logic
+        function switchTab(activeTabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.getElementById(activeTabId).classList.remove('hidden');
+
+            document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+                btn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50";
             });
-
-            // Show current active tab content
-            document.getElementById(`content-${tabId}`).classList.remove('hidden');
-            // Highlight active button
-            document.getElementById(`tab-${tabId}`).classList.add('bg-teal-600', 'text-white', 'shadow-md');
-            document.getElementById(`tab-${tabId}`).classList.remove('bg-gray-800', 'text-gray-400');
+            const activeBtn = document.getElementById('btn-' + activeTabId);
+            activeBtn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs";
         }
 
-        // Live calculation and DOM updates for tabs & overview metrics
-        function syncUI() {
-            // Compute localized asset tab totals
-            const mfTotal = retirementMasterDataset.mutualFunds.reduce((sum, item) => sum + (item.currentBalance || 0), 0);
-            const stocksTotal = retirementMasterDataset.stocks.reduce((sum, item) => sum + (item.amount || 0), 0);
-            const goldTotal = retirementMasterDataset.gold.reduce((sum, item) => sum + (item.currentBalance || 0), 0);
-            const fiTotal = retirementMasterDataset.fixedIncome.reduce((sum, item) => sum + (item.currentBalance || 0), 0);
-            const cashTotal = retirementMasterDataset.cashAndBank.reduce((sum, item) => sum + (item.currentBalance || 0), 0);
-            
-            const portfolioGrandTotal = mfTotal + stocksTotal + goldTotal + fiTotal + cashTotal;
-
-            // Push totals to Overview Interface elements
-            document.getElementById('globalPortfolioTotal').innerText = `₹${portfolioGrandTotal.toLocaleString('en-IN')}`;
-            document.getElementById('summary-mf').innerText = `₹${mfTotal.toLocaleString('en-IN')}`;
-            document.getElementById('summary-stocks').innerText = `₹${stocksTotal.toLocaleString('en-IN')}`;
-            document.getElementById('summary-gold').innerText = `₹${goldTotal.toLocaleString('en-IN')}`;
-            document.getElementById('summary-fixedincome').innerText = `₹${fiTotal.toLocaleString('en-IN')}`;
-            document.getElementById('summary-cash').innerText = `₹${cashTotal.toLocaleString('en-IN')}`;
-
-            // Sync structural code strings back inside asset textboxes for direct text configurations
-            document.getElementById('data-mf').value = JSON.stringify(retirementMasterDataset.mutualFunds, null, 4);
-            document.getElementById('data-stocks').value = JSON.stringify(retirementMasterDataset.stocks, null, 4);
-            document.getElementById('data-gold').value = JSON.stringify(retirementMasterDataset.gold, null, 4);
-            document.getElementById('data-fixedincome').value = JSON.stringify(retirementMasterDataset.fixedIncome, null, 4);
-            document.getElementById('data-cash').value = JSON.stringify(retirementMasterDataset.cashAndBank, null, 4);
-        }
-
-        // Listens to direct typing modifications within active code textareas
-        function updateStateFromUI(assetKey, textValue) {
-            try {
-                const parsedArray = JSON.parse(textValue);
-                if (Array.isArray(parsedArray)) {
-                    retirementMasterDataset[assetKey] = parsedArray;
-                    // Recalculate dashboard figures smoothly
-                    syncUI();
-                }
-            } catch (e) {
-                // Silently hold error updates while user is typing out custom brackets manually
+        function toggleManageCard() {
+            const content = document.getElementById('manageCardContent');
+            const icon = document.getElementById('toggleIcon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.innerText = "Shrink ↑";
+            } else {
+                content.classList.add('hidden');
+                icon.innerText = "Expand ↓";
             }
         }
 
-        // --- NEW GLOBAL BACKUP: DOWNLOAD ALL TABS ---
-        function exportCompleteDataset() {
-            const wrapperPayload = {
-                appIdentifier: "Retirement-Portfolio-Tracker-Master",
-                lastSavedAt: new Date().toISOString(),
-                dataset: retirementMasterDataset
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(wrapperPayload, null, 4));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `retirement_full_backup_${new Date().toISOString().split('T')[0]}.json`);
-            
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+        // Global Updater logic
+        function triggerGlobalRecalculation() {
+            rebuildEPFTable();
+            rebuildNPSTable();
+            calculateLiquid();
+            calculateOther();
+            generateRetirementPlan();
+            updateGlobalOverview();
         }
 
-        // --- NEW GLOBAL RESTORE: UPLOAD ALL TABS ---
-        function importCompleteDataset(event) {
+        function updateGlobalOverview() {
+            const currentTotal = globalMFCurrent + globalEPFCurrent + globalNPSCurrent + globalLiqCurrent + globalOtherCurrent;
+            const projectedTotal = globalMFFuture + globalEPFFuture + globalNPSFuture + globalLiqFuture + globalOtherFuture;
+
+            document.getElementById('cumulativeValue').innerText = `₹${currentTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('futureProjectedValue').innerText = `₹${projectedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            // Allocation labels
+            document.getElementById('allocMF').innerText = `₹${globalMFCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+            document.getElementById('allocEPF').innerText = `₹${globalEPFCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+            document.getElementById('allocNPS').innerText = `₹${globalNPSCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+            document.getElementById('allocLiqOther').innerText = `₹${(globalLiqCurrent + globalOtherCurrent).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+        }
+
+        // -------------------- RETIREMENT PLAN GENERATOR --------------------
+        function generateRetirementPlan() {
+            const planTableBody = document.getElementById('planTableBody');
+            if (!planTableBody) return;
+
+            let mfVal = globalMFCurrent || 7100000;
+            let epfVal = globalEPFCurrent || 6600000;
+            let npsVal = globalNPSCurrent || 1900000;
+
+            let rowsHtml = '';
+            const startYear = 2026;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+
+            for (let year = startYear; year <= rYear; year++) {
+                const totalCorpus = mfVal + epfVal + npsVal;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-semibold text-slate-900">${year}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${mfVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${epfVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${npsVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right bg-emerald-50/30 text-emerald-700 font-bold">₹${totalCorpus.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                    </tr>`;
+
+                // Compound values for the next iteration (Year-on-Year compounding)
+                mfVal *= 1.10;
+                epfVal *= 1.07;
+                npsVal *= 1.09;
+            }
+
+            planTableBody.innerHTML = rowsHtml;
+        }
+
+        // -------------------- COMPOUND CALCULATOR PARSERS --------------------
+        function computeCompoundingTimeline(currentVal, startYear, endYear, rate) {
+            let list = [];
+            let val = currentVal;
+            const r = rate / 100;
+
+            for (let year = startYear; year <= endYear; year++) {
+                let interest = val * r;
+                let closing = val + interest;
+                list.push({ year, opening: val, interest, closing });
+                val = closing;
+            }
+            return list;
+        }
+
+        // -------------------- DYNAMIC EPF SYSTEM LOGIC --------------------
+        function rebuildEPFTable() {
+            const currentVal = parseFloat(document.getElementById('epfCurrentVal').value) || 0;
+            const startYear = parseInt(document.getElementById('epfCurrentYear').value) || 2026;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+
+            globalEPFCurrent = currentVal;
+            document.getElementById('epfHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            const tbody = document.getElementById('epfTableBody');
+            let rowsHtml = '';
+            let val = currentVal;
+
+            for (let year = startYear; year <= rYear; year++) {
+                if (epfInterestRates[year] === undefined) {
+                    epfInterestRates[year] = 7.0;
+                }
+                const currentRate = epfInterestRates[year];
+                const interestEarned = val * (currentRate / 100);
+                const closingValue = val + interestEarned;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-medium text-slate-900">${year}</td>
+                        <td class="py-2 px-5 text-center">
+                            <input type="number" step="0.1" value="${currentRate}" 
+                                   oninput="updateEPFRate(${year}, this.value)" 
+                                   class="w-20 p-1 text-center font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                        </td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${closingValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`;
+
+                val = closingValue;
+            }
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+            globalEPFFuture = val;
+            document.getElementById('epfHeaderProj').innerText = `₹${globalEPFFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            updateGlobalOverview();
+        }
+
+        function updateEPFRate(year, value) {
+            const parsedRate = parseFloat(value);
+            epfInterestRates[year] = isNaN(parsedRate) ? 0 : parsedRate;
+            rebuildEPFTable();
+        }
+
+
+        // -------------------- DYNAMIC NPS SYSTEM LOGIC --------------------
+        function rebuildNPSTable() {
+            const currentVal = parseFloat(document.getElementById('npsCurrentVal').value) || 0;
+            const startYear = parseInt(document.getElementById('npsCurrentYear').value) || 2026;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+
+            globalNPSCurrent = currentVal;
+            document.getElementById('npsHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            const tbody = document.getElementById('npsTableBody');
+            let rowsHtml = '';
+            let val = currentVal;
+
+            for (let year = startYear; year <= rYear; year++) {
+                if (npsInterestRates[year] === undefined) {
+                    npsInterestRates[year] = 9.0;
+                }
+                const currentRate = npsInterestRates[year];
+                const interestEarned = val * (currentRate / 100);
+                const closingValue = val + interestEarned;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-medium text-slate-900">${year}</td>
+                        <td class="py-2 px-5 text-center">
+                            <input type="number" step="0.1" value="${currentRate}" 
+                                   oninput="updateNPSRate(${year}, this.value)" 
+                                   class="w-20 p-1 text-center font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                        </td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${closingValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`;
+
+                val = closingValue;
+            }
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+            globalNPSFuture = val;
+            document.getElementById('npsHeaderProj').innerText = `₹${globalNPSFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            updateGlobalOverview();
+        }
+
+        function updateNPSRate(year, value) {
+            const parsedRate = parseFloat(value);
+            npsInterestRates[year] = isNaN(parsedRate) ? 0 : parsedRate;
+            rebuildNPSTable();
+        }
+
+
+        // -------------------- OTHER MODULES --------------------
+        function calculateLiquid() {
+            const currentVal = parseFloat(document.getElementById('liqCurrentVal').value) || 0;
+            const startYear = parseInt(document.getElementById('liqCurrentYear').value) || 2026;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+            const rate = parseFloat(document.getElementById('liqInterest').value) || 0;
+
+            globalLiqCurrent = currentVal;
+            document.getElementById('liqHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            const timeline = computeCompoundingTimeline(currentVal, startYear, rYear, rate);
+            const tbody = document.getElementById('liqTableBody');
+            let rowsHtml = '';
+
+            timeline.forEach(row => {
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-medium text-slate-900">${row.year}</td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${row.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.closing.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="3" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+
+            globalLiqFuture = timeline.length > 0 ? timeline[timeline.length - 1].closing : currentVal;
+            document.getElementById('liqHeaderProj').innerText = `₹${globalLiqFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            updateGlobalOverview();
+        }
+
+        function calculateOther() {
+            const currentVal = parseFloat(document.getElementById('otherCurrentVal').value) || 0;
+            const startYear = parseInt(document.getElementById('otherCurrentYear').value) || 2026;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+            const rate = parseFloat(document.getElementById('otherInterest').value) || 0;
+
+            globalOtherCurrent = currentVal;
+            document.getElementById('otherHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            const timeline = computeCompoundingTimeline(currentVal, startYear, rYear, rate);
+            const tbody = document.getElementById('otherTableBody');
+            let rowsHtml = '';
+
+            timeline.forEach(row => {
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-medium text-slate-900">${row.year}</td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${row.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.closing.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="3" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+
+            globalOtherFuture = timeline.length > 0 ? timeline[timeline.length - 1].closing : currentVal;
+            document.getElementById('otherHeaderProj').innerText = `₹${globalOtherFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            updateGlobalOverview();
+        }
+
+        // -------------------- MUTUAL FUNDS SYSTEM LOGIC --------------------
+        function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const verifiedJson = JSON.parse(e.target.result);
-                    
-                    if (!verifiedJson || typeof verifiedJson !== 'object' || !verifiedJson.dataset) {
-                        throw new Error("Missing 'dataset' root framework object validation.");
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.mutual_funds) {
+                        alert("Malformed template: JSON must contain 'mutual_funds' key.");
+                        return;
                     }
-
-                    // Override current dataset with uploaded JSON values across all tabs
-                    retirementMasterDataset = verifiedJson.dataset;
-                    
-                    // Render everything fresh
-                    syncUI();
-                    alert("Complete multi-tab dataset successfully loaded and synced!");
+                    document.getElementById('jsonInput').value = JSON.stringify(parsed, null, 4);
+                    calculatePortfolio(); 
                 } catch (err) {
-                    alert("Error: The file uploaded is not a valid complete portfolio backup JSON schema.");
-                    console.error("Upload process error: ", err);
+                    alert("Parsed stream contains file reading invalidations.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadJson() {
+            const currentText = document.getElementById('jsonInput').value;
+            try {
+                JSON.parse(currentText);
+                const blob = new Blob([currentText], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "mutual_funds_portfolio.json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert("Cannot download invalid JSON structure.");
+            }
+        }
+
+        async function calculatePortfolio() {
+            const jsonInputEl = document.getElementById('jsonInput');
+            const tableBody = document.getElementById('tableBody');
+            const totalFundsEl = document.getElementById('totalFunds');
+
+            if (!jsonInputEl || !tableBody) return; 
+            
+            const jsonText = jsonInputEl.value;
+            let rawData;
+            try { rawData = JSON.parse(jsonText); } catch (e) {
+                alert("Invalid JSON format inside code block.");
+                return;
+            }
+
+            const fundsBlock = rawData.mutual_funds || {}; 
+            const amfiCodes = Object.keys(fundsBlock);
+
+            if (amfiCodes.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No mutual funds identified.</td></tr>`;
+                const mfCurrentValEl = document.getElementById('mfCurrentVal');
+                if (mfCurrentValEl) mfCurrentValEl.innerText = "₹0.00";
+                globalMFCurrent = 0;
+                globalMFFuture = 0;
+                updateGlobalOverview();
+                return;
+            }
+
+            tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-500 text-xs tracking-wide animate-pulse">Querying live AMFI pricing index...</td></tr>`;
+            
+            let grandTotal = 0;
+            let successCount = 0;
+            localizedCacheRows = [];
+
+            const fetchPromises = amfiCodes.map(async (amfi) => {
+                const item = fundsBlock[amfi];
+                if (!item || typeof item.units === 'undefined') return;
+                const units = parseFloat(item.units) || 0;
+
+                try {
+                    const response = await fetch(`https://api.mfapi.in/mf/${amfi}`);
+                    const json = await response.json();
+
+                    if (json && json.meta && json.data && json.data.length > 0) {
+                        const schemeName = json.meta.scheme_name;
+                        const currentNav = parseFloat(json.data[0].nav) || 0;
+                        const currentValue = units * currentNav;
+
+                        return {
+                            name: schemeName,
+                            code: parseInt(amfi),
+                            units: units,
+                            nav: currentNav,
+                            value: currentValue,
+                            status: 'success'
+                        };
+                    } else {
+                        throw new Error();
+                    }
+                } catch (e) {
+                    return {
+                        name: `Lookup Exception: Scheme metadata error [AMFI: ${amfi}]`,
+                        code: parseInt(amfi),
+                        units: units,
+                        nav: 0,
+                        value: 0,
+                        status: 'error'
+                    };
+                }
+            });
+
+            const results = await Promise.all(fetchPromises);
+            localizedCacheRows = results.filter(row => row !== undefined);
+
+            localizedCacheRows.forEach(row => {
+                if (row.status === 'success') {
+                    grandTotal += row.value;
+                    successCount++;
+                }
+            });
+
+            globalMFCurrent = grandTotal;
+            const rYearEl = document.getElementById('retirementYear');
+            const rYear = rYearEl ? (parseInt(rYearEl.value) || 2043) : 2043;
+            const yearsLeft = Math.max(0, rYear - 2026);
+            globalMFFuture = grandTotal * Math.pow(1.10, yearsLeft); 
+
+            const mfCurrentValEl = document.getElementById('mfCurrentVal');
+            if (mfCurrentValEl) {
+                mfCurrentValEl.innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            }
+            if (totalFundsEl) {
+                totalFundsEl.innerText = successCount;
+            }
+            
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            if (lastUpdatedEl) {
+                const timeMarker = new Date();
+                lastUpdatedEl.innerText = `Last updated: ${timeMarker.toLocaleTimeString()}`;
+            }
+
+            applySort();
+            updateGlobalOverview();
+        }
+
+        function renderMFTable() {
+            const tableBody = document.getElementById('tableBody');
+            if (!tableBody) return;
+            let rowsHtml = '';
+
+            localizedCacheRows.forEach(row => {
+                if (row.status === 'success') {
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="py-4 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate" title="${row.name}">${row.name}</td>
+                            <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${row.code}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">${row.units.toLocaleString('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">₹${row.nav.toFixed(2)}</td>
+                            <td class="py-4 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>`;
+                } else {
+                    rowsHtml += `
+                        <tr class="bg-rose-50/40">
+                            <td class="py-4 px-5 text-rose-600 italic font-medium max-w-xs md:max-w-md truncate">${row.name}</td>
+                            <td class="py-4 px-5 text-center font-mono text-xs text-slate-400">${row.code}</td>
+                            <td class="py-4 px-5 text-right font-mono text-slate-600">${row.units}</td>
+                            <td class="py-4 px-5 text-right text-rose-500">-</td>
+                            <td class="py-4 px-5 text-right text-rose-500 font-medium font-mono">Lookup Err</td>
+                        </tr>`;
+                }
+            });
+
+            tableBody.innerHTML = rowsHtml || `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No active data rows.</td></tr>`;
+        }
+
+        function sortMFTable(columnIndex, dataType) {
+            if (runningSortDirection.colIndex === columnIndex) {
+                runningSortDirection.order = runningSortDirection.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                runningSortDirection.colIndex = columnIndex;
+                runningSortDirection.order = 'desc';
+            }
+
+            const headers = document.querySelectorAll('#mfTable th');
+            headers.forEach((th, idx) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (idx === columnIndex) {
+                    th.classList.add(runningSortDirection.order === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            applySort(dataType);
+        }
+
+        function applySort(dataType = 'number') {
+            const idx = runningSortDirection.colIndex;
+            const dirMultiplier = runningSortDirection.order === 'asc' ? 1 : -1;
+            const propsMapping = ['name', 'code', 'units', 'nav', 'value'];
+            const targetProp = propsMapping[idx];
+
+            localizedCacheRows.sort((a, b) => {
+                let valA = a[targetProp];
+                let valB = b[targetProp];
+
+                if (dataType === 'text') {
+                    return valA.toString().localeCompare(valB.toString()) * dirMultiplier;
+                } else {
+                    return (valA - valB) * dirMultiplier;
+                }
+            });
+
+            renderMFTable();
+        }
+
+        // -------------------- GLOBAL STATE IMPORT/EXPORT --------------------
+        function exportGlobalState() {
+            let mfParsedData = {};
+            try {
+                mfParsedData = JSON.parse(document.getElementById('jsonInput').value);
+            } catch (e) {
+                mfParsedData = initialDataset;
+            }
+
+            const state = {
+                retirementYear: parseInt(document.getElementById('retirementYear').value),
+                mutual_funds_raw: mfParsedData,
+                epf: {
+                    currentVal: parseFloat(document.getElementById('epfCurrentVal').value),
+                    currentYear: parseInt(document.getElementById('epfCurrentYear').value),
+                    interestRates: epfInterestRates
+                },
+                nps: {
+                    currentVal: parseFloat(document.getElementById('npsCurrentVal').value),
+                    currentYear: parseInt(document.getElementById('npsCurrentYear').value),
+                    interestRates: npsInterestRates
+                },
+                liquid: {
+                    currentVal: parseFloat(document.getElementById('liqCurrentVal').value),
+                    currentYear: parseInt(document.getElementById('liqCurrentYear').value),
+                    interest: parseFloat(document.getElementById('liqInterest').value)
+                },
+                other: {
+                    currentVal: parseFloat(document.getElementById('otherCurrentVal').value),
+                    currentYear: parseInt(document.getElementById('otherCurrentYear').value),
+                    interest: parseFloat(document.getElementById('otherInterest').value)
                 }
             };
 
-            reader.readAsText(file);
-            event.target.value = ""; // Clear file target node
+            const blob = new Blob([JSON.stringify(state, null, 4)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "retirement_planner_global_state.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
-        // Bootstrapping initialization trigger
-        document.addEventListener("DOMContentLoaded", syncUI);
+        function importGlobalState(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    
+                    // Validate file minimum keys
+                    if (!state.epf || !state.nps || !state.mutual_funds_raw) {
+                        alert("Invalid Global State file format.");
+                        return;
+                    }
+
+                    // Restore state properties to fields safely
+                    document.getElementById('retirementYear').value = state.retirementYear || 2043;
+                    document.getElementById('jsonInput').value = JSON.stringify(state.mutual_funds_raw, null, 4);
+
+                    // Restore EPF
+                    document.getElementById('epfCurrentVal').value = state.epf.currentVal;
+                    document.getElementById('epfCurrentYear').value = state.epf.currentYear;
+                    epfInterestRates = state.epf.interestRates || {};
+
+                    // Restore NPS
+                    document.getElementById('npsCurrentVal').value = state.nps.currentVal;
+                    document.getElementById('npsCurrentYear').value = state.nps.currentYear;
+                    npsInterestRates = state.nps.interestRates || {};
+
+                    // Restore Liquid
+                    document.getElementById('liqCurrentVal').value = state.liquid.currentVal;
+                    document.getElementById('liqCurrentYear').value = state.liquid.currentYear;
+                    document.getElementById('liqInterest').value = state.liquid.interest;
+
+                    // Restore Other
+                    document.getElementById('otherCurrentVal').value = state.other.currentVal;
+                    document.getElementById('otherCurrentYear').value = state.other.currentYear;
+                    document.getElementById('otherInterest').value = state.other.interest;
+
+                    // Re-calculate everything cleanly
+                    triggerGlobalRecalculation();
+                    calculatePortfolio();
+
+                    alert("Application state imported successfully!");
+                } catch (err) {
+                    alert("Unable to parse state JSON file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Run application on start
+        window.addEventListener('DOMContentLoaded', () => {
+            calculatePortfolio();
+            rebuildEPFTable();
+            rebuildNPSTable();
+            calculateLiquid();
+            calculateOther();
+            generateRetirementPlan();
+            switchTab('planTab'); // Default to the newly added Retirement Plan tab
+        });
     </script>
 </body>
 </html>
