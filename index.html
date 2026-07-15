@@ -151,7 +151,7 @@
                         <div class="text-right">
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
                             <h4 id="totalFunds" class="text-xl font-bold text-slate-900">0</h4>
-                            <!-- Fixed: Added the missing container to anchor timestamps cleanly -->
+                            <!-- Timestamp Placeholder -->
                             <p id="lastUpdated" class="text-[10px] text-slate-400 mt-1 font-mono"></p>
                         </div>
                     </div>
@@ -662,11 +662,13 @@
         }
 
         async function calculatePortfolio() {
-            const jsonText = document.getElementById('jsonInput').value;
+            const jsonInputEl = document.getElementById('jsonInput');
             const tableBody = document.getElementById('tableBody');
             const totalFundsEl = document.getElementById('totalFunds');
-            const lastUpdatedEl = document.getElementById('lastUpdated');
 
+            if (!jsonInputEl || !tableBody) return; // Exit if DOM isn't parsed yet
+            
+            const jsonText = jsonInputEl.value;
             let rawData;
             try { rawData = JSON.parse(jsonText); } catch (e) {
                 alert("Invalid JSON format inside code block.");
@@ -678,7 +680,8 @@
 
             if (amfiCodes.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No mutual funds identified.</td></tr>`;
-                document.getElementById('mfCurrentVal').innerText = "₹0.00";
+                const mfCurrentValEl = document.getElementById('mfCurrentVal');
+                if (mfCurrentValEl) mfCurrentValEl.innerText = "₹0.00";
                 globalMFCurrent = 0;
                 globalMFFuture = 0;
                 updateGlobalOverview();
@@ -742,14 +745,21 @@
 
             globalMFCurrent = grandTotal;
             // For simple linear timeline compilation, assume MF maintains a 10% expected return
-            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+            const rYearEl = document.getElementById('retirementYear');
+            const rYear = rYearEl ? (parseInt(rYearEl.value) || 2043) : 2043;
             const yearsLeft = Math.max(0, rYear - 2026);
             globalMFFuture = grandTotal * Math.pow(1.10, yearsLeft); // 10% CAGR baseline
 
-            document.getElementById('mfCurrentVal').innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-            totalFundsEl.innerText = successCount;
+            const mfCurrentValEl = document.getElementById('mfCurrentVal');
+            if (mfCurrentValEl) {
+                mfCurrentValEl.innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            }
+            if (totalFundsEl) {
+                totalFundsEl.innerText = successCount;
+            }
             
-            // Fixed: Guarded update check prevents execution crashes if the element is renamed or absent
+            // Fixed: Gather element dynamically at the absolute moment of writing to safeguard against race conditions
+            const lastUpdatedEl = document.getElementById('lastUpdated');
             if (lastUpdatedEl) {
                 const timeMarker = new Date();
                 lastUpdatedEl.innerText = `Last updated: ${timeMarker.toLocaleTimeString()}`;
@@ -761,6 +771,7 @@
 
         function renderMFTable() {
             const tableBody = document.getElementById('tableBody');
+            if (!tableBody) return;
             let rowsHtml = '';
 
             localizedCacheRows.forEach(row => {
