@@ -183,21 +183,15 @@
         <div id="epfTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">EPF Compound Parameters</h3>
+                    <h3 class="font-semibold text-sm text-slate-900">EPF Parameters</h3>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="epfCurrentVal" value="6600000" oninput="calculateEPF()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            <input type="number" id="epfCurrentVal" value="6600000" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                                <input type="number" id="epfCurrentYear" value="2026" oninput="calculateEPF()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
-                                <input type="number" step="0.1" id="epfInterest" value="7" oninput="calculateEPF()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
-                            </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                            <input type="number" id="epfCurrentYear" value="2026" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
                         </div>
                     </div>
                 </div>
@@ -223,6 +217,7 @@
                                 <thead>
                                     <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-center w-32">Interest (%)</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
@@ -239,21 +234,15 @@
         <div id="npsTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">NPS Compound Parameters</h3>
+                    <h3 class="font-semibold text-sm text-slate-900">NPS Parameters</h3>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="npsCurrentVal" value="1900000" oninput="calculateNPS()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            <input type="number" id="npsCurrentVal" value="1900000" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                                <input type="number" id="npsCurrentYear" value="2026" oninput="calculateNPS()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
-                                <input type="number" step="0.1" id="npsInterest" value="9" oninput="calculateNPS()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
-                            </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
+                            <input type="number" id="npsCurrentYear" value="2026" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
                         </div>
                     </div>
                 </div>
@@ -279,6 +268,7 @@
                                 <thead>
                                     <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
+                                        <th class="py-3 px-5 text-center w-32">Interest (%)</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
@@ -423,6 +413,10 @@
         let globalLiqFuture = 0;
         let globalOtherFuture = 0;
 
+        // Custom local cache maps for storing year-specific user inputs
+        let epfInterestRates = {}; // Format: { year: rate }
+        let npsInterestRates = {}; // Format: { year: rate }
+
         // Raw local datasets for parsing
         const initialDataset = {
             "mutual_funds": {
@@ -471,8 +465,8 @@
 
         // Global Updater logic
         function triggerGlobalRecalculation() {
-            calculateEPF();
-            calculateNPS();
+            rebuildEPFTable();
+            rebuildNPSTable();
             calculateLiquid();
             calculateOther();
             updateGlobalOverview();
@@ -507,64 +501,107 @@
             return list;
         }
 
-        function calculateEPF() {
+        // -------------------- DYNAMIC EPF SYSTEM LOGIC --------------------
+        function rebuildEPFTable() {
             const currentVal = parseFloat(document.getElementById('epfCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('epfCurrentYear').value) || 2026;
             const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
-            const rate = parseFloat(document.getElementById('epfInterest').value) || 0;
 
             globalEPFCurrent = currentVal;
             document.getElementById('epfHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
-            const timeline = computeCompoundingTimeline(currentVal, startYear, rYear, rate);
             const tbody = document.getElementById('epfTableBody');
             let rowsHtml = '';
+            let val = currentVal;
 
-            timeline.forEach(row => {
+            for (let year = startYear; year <= rYear; year++) {
+                // Check if we have an existing customized input rate for this year, else default to 7
+                if (epfInterestRates[year] === undefined) {
+                    epfInterestRates[year] = 7.0;
+                }
+                const currentRate = epfInterestRates[year];
+                const interestEarned = val * (currentRate / 100);
+                const closingValue = val + interestEarned;
+
                 rowsHtml += `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-3 px-5 font-medium text-slate-900">${row.year}</td>
-                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${row.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.closing.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 font-medium text-slate-900">${year}</td>
+                        <td class="py-2 px-5 text-center">
+                            <input type="number" step="0.1" value="${currentRate}" 
+                                   oninput="updateEPFRate(${year}, this.value)" 
+                                   class="w-20 p-1 text-center font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                        </td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${closingValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>`;
-            });
-            tbody.innerHTML = rowsHtml || `<tr><td colspan="3" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
 
-            globalEPFFuture = timeline.length > 0 ? timeline[timeline.length - 1].closing : currentVal;
+                val = closingValue;
+            }
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+            globalEPFFuture = val;
             document.getElementById('epfHeaderProj').innerText = `₹${globalEPFFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             updateGlobalOverview();
         }
 
-        // NPS Compounding timeline parser
-        function calculateNPS() {
+        function updateEPFRate(year, value) {
+            const parsedRate = parseFloat(value);
+            epfInterestRates[year] = isNaN(parsedRate) ? 0 : parsedRate;
+            rebuildEPFTable();
+        }
+
+
+        // -------------------- DYNAMIC NPS SYSTEM LOGIC --------------------
+        function rebuildNPSTable() {
             const currentVal = parseFloat(document.getElementById('npsCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('npsCurrentYear').value) || 2026;
             const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
-            const rate = parseFloat(document.getElementById('npsInterest').value) || 0;
 
             globalNPSCurrent = currentVal;
             document.getElementById('npsHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
-            const timeline = computeCompoundingTimeline(currentVal, startYear, rYear, rate);
             const tbody = document.getElementById('npsTableBody');
             let rowsHtml = '';
+            let val = currentVal;
 
-            timeline.forEach(row => {
+            for (let year = startYear; year <= rYear; year++) {
+                // Check if we have an existing customized input rate for this year, else default to 9
+                if (npsInterestRates[year] === undefined) {
+                    npsInterestRates[year] = 9.0;
+                }
+                const currentRate = npsInterestRates[year];
+                const interestEarned = val * (currentRate / 100);
+                const closingValue = val + interestEarned;
+
                 rowsHtml += `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-3 px-5 font-medium text-slate-900">${row.year}</td>
-                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${row.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${row.closing.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 font-medium text-slate-900">${year}</td>
+                        <td class="py-2 px-5 text-center">
+                            <input type="number" step="0.1" value="${currentRate}" 
+                                   oninput="updateNPSRate(${year}, this.value)" 
+                                   class="w-20 p-1 text-center font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                        </td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${closingValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>`;
-            });
-            tbody.innerHTML = rowsHtml || `<tr><td colspan="3" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
 
-            globalNPSFuture = timeline.length > 0 ? timeline[timeline.length - 1].closing : currentVal;
+                val = closingValue;
+            }
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
+            globalNPSFuture = val;
             document.getElementById('npsHeaderProj').innerText = `₹${globalNPSFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             updateGlobalOverview();
         }
 
-        // Liquid Assets Compounding timeline parser
+        function updateNPSRate(year, value) {
+            const parsedRate = parseFloat(value);
+            npsInterestRates[year] = isNaN(parsedRate) ? 0 : parsedRate;
+            rebuildNPSTable();
+        }
+
+
+        // -------------------- OTHER MODULES --------------------
         function calculateLiquid() {
             const currentVal = parseFloat(document.getElementById('liqCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('liqCurrentYear').value) || 2026;
@@ -593,7 +630,6 @@
             updateGlobalOverview();
         }
 
-        // Other Assets Compounding timeline parser
         function calculateOther() {
             const currentVal = parseFloat(document.getElementById('otherCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('otherCurrentYear').value) || 2026;
@@ -666,7 +702,7 @@
             const tableBody = document.getElementById('tableBody');
             const totalFundsEl = document.getElementById('totalFunds');
 
-            if (!jsonInputEl || !tableBody) return; // Exit if DOM isn't parsed yet
+            if (!jsonInputEl || !tableBody) return; 
             
             const jsonText = jsonInputEl.value;
             let rawData;
@@ -694,7 +730,6 @@
             let successCount = 0;
             localizedCacheRows = [];
 
-            // Trigger parallel fetch calls to optimize latency
             const fetchPromises = amfiCodes.map(async (amfi) => {
                 const item = fundsBlock[amfi];
                 if (!item || typeof item.units === 'undefined') return;
@@ -732,7 +767,6 @@
                 }
             });
 
-            // Wait for all requests to finish simultaneously
             const results = await Promise.all(fetchPromises);
             localizedCacheRows = results.filter(row => row !== undefined);
 
@@ -744,11 +778,10 @@
             });
 
             globalMFCurrent = grandTotal;
-            // For simple linear timeline compilation, assume MF maintains a 10% expected return
             const rYearEl = document.getElementById('retirementYear');
             const rYear = rYearEl ? (parseInt(rYearEl.value) || 2043) : 2043;
             const yearsLeft = Math.max(0, rYear - 2026);
-            globalMFFuture = grandTotal * Math.pow(1.10, yearsLeft); // 10% CAGR baseline
+            globalMFFuture = grandTotal * Math.pow(1.10, yearsLeft); 
 
             const mfCurrentValEl = document.getElementById('mfCurrentVal');
             if (mfCurrentValEl) {
@@ -758,7 +791,6 @@
                 totalFundsEl.innerText = successCount;
             }
             
-            // Fixed: Gather element dynamically at the absolute moment of writing to safeguard against race conditions
             const lastUpdatedEl = document.getElementById('lastUpdated');
             if (lastUpdatedEl) {
                 const timeMarker = new Date();
@@ -840,10 +872,9 @@
 
         // Run application on start
         window.addEventListener('DOMContentLoaded', () => {
-            // Initiate loaders instantly
             calculatePortfolio();
-            calculateEPF();
-            calculateNPS();
+            rebuildEPFTable();
+            rebuildNPSTable();
             calculateLiquid();
             calculateOther();
         });
