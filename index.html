@@ -6,7 +6,7 @@
     <title>Retirement Portfolio Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
@@ -96,9 +96,12 @@
             </div>
         </div>
 
-        <!-- 5 TABS NAVIGATION BAR -->
+        <!-- 6 TABS NAVIGATION BAR -->
         <div class="border-b border-slate-200 bg-white rounded-xl p-1 shadow-2xs border flex flex-wrap gap-1">
-            <button onclick="switchTab('mfTab')" id="btn-mfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs">
+            <button onclick="switchTab('planTab')" id="btn-planTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs">
+                Retirement Plan
+            </button>
+            <button onclick="switchTab('mfTab')" id="btn-mfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
                 Mutual Funds
             </button>
             <button onclick="switchTab('epfTab')" id="btn-epfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
@@ -115,8 +118,39 @@
             </button>
         </div>
 
+        <!-- -------------------- TAB CONTENT: RETIREMENT PLAN -------------------- -->
+        <div id="planTab" class="tab-pane space-y-6">
+            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-slate-200 px-5 py-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900">Expected Corpus Projection (2026 - 2043)</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Calculated based on starting values compounded annually (MF: 10%, EPF: 7%, NPS: 9%)</p>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-semibold border border-emerald-100">
+                        Target Year: 2043
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                <th class="py-3 px-5">Year</th>
+                                <th class="py-3 px-5 text-right">Mutual Funds (10%)</th>
+                                <th class="py-3 px-5 text-right">EPF (7%)</th>
+                                <th class="py-3 px-5 text-right">NPS (9%)</th>
+                                <th class="py-3 px-5 text-right bg-emerald-50/40 text-emerald-800 font-semibold">Total Corpus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planTableBody" class="divide-y divide-slate-100 text-sm font-mono">
+                            <!-- Dynamic Rows Go Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- -------------------- TAB CONTENT: MUTUAL FUNDS -------------------- -->
-        <div id="mfTab" class="tab-pane space-y-6">
+        <div id="mfTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <!-- Collapsible Control Card -->
                 <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -469,6 +503,7 @@
             rebuildNPSTable();
             calculateLiquid();
             calculateOther();
+            generateRetirementPlan();
             updateGlobalOverview();
         }
 
@@ -484,6 +519,38 @@
             document.getElementById('allocEPF').innerText = `₹${globalEPFCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocNPS').innerText = `₹${globalNPSCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocLiqOther').innerText = `₹${(globalLiqCurrent + globalOtherCurrent).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+        }
+
+        // -------------------- RETIREMENT PLAN GENERATOR --------------------
+        function generateRetirementPlan() {
+            const planTableBody = document.getElementById('planTableBody');
+            if (!planTableBody) return;
+
+            let mfVal = 7100000;
+            let epfVal = 6600000;
+            let npsVal = 1900000;
+
+            let rowsHtml = '';
+
+            for (let year = 2026; year <= 2043; year++) {
+                const totalCorpus = mfVal + epfVal + npsVal;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 px-5 font-semibold text-slate-900">${year}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${mfVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${epfVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right text-slate-700">₹${npsVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right bg-emerald-50/30 text-emerald-700 font-bold">₹${totalCorpus.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                    </tr>`;
+
+                // Compound values for the next iteration (Year-on-Year compounding)
+                mfVal *= 1.10;
+                epfVal *= 1.07;
+                npsVal *= 1.09;
+            }
+
+            planTableBody.innerHTML = rowsHtml;
         }
 
         // -------------------- COMPOUND CALCULATOR PARSERS --------------------
@@ -515,7 +582,6 @@
             let val = currentVal;
 
             for (let year = startYear; year <= rYear; year++) {
-                // Check if we have an existing customized input rate for this year, else default to 7
                 if (epfInterestRates[year] === undefined) {
                     epfInterestRates[year] = 7.0;
                 }
@@ -565,7 +631,6 @@
             let val = currentVal;
 
             for (let year = startYear; year <= rYear; year++) {
-                // Check if we have an existing customized input rate for this year, else default to 9
                 if (npsInterestRates[year] === undefined) {
                     npsInterestRates[year] = 9.0;
                 }
@@ -877,6 +942,8 @@
             rebuildNPSTable();
             calculateLiquid();
             calculateOther();
+            generateRetirementPlan();
+            switchTab('planTab'); // Default to the newly added Retirement Plan tab
         });
     </script>
 </body>
