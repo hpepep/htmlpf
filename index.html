@@ -686,9 +686,10 @@
             let successCount = 0;
             localizedCacheRows = [];
 
-            for (const amfi of amfiCodes) {
+            // Trigger parallel fetch calls to optimize latency
+            const fetchPromises = amfiCodes.map(async (amfi) => {
                 const item = fundsBlock[amfi];
-                if (!item || typeof item.units === 'undefined') continue;
+                if (!item || typeof item.units === 'undefined') return;
                 const units = parseFloat(item.units) || 0;
 
                 try {
@@ -700,29 +701,39 @@
                         const currentNav = parseFloat(json.data[0].nav) || 0;
                         const currentValue = units * currentNav;
 
-                        grandTotal += currentValue;
-                        successCount++;
-
-                        localizedCacheRows.push({
+                        return {
                             name: schemeName,
                             code: parseInt(amfi),
                             units: units,
                             nav: currentNav,
                             value: currentValue,
                             status: 'success'
-                        });
-                    } else { throw new Error(); }
+                        };
+                    } else {
+                        throw new Error();
+                    }
                 } catch (e) {
-                    localizedCacheRows.push({
+                    return {
                         name: `Lookup Exception: Scheme metadata error [AMFI: ${amfi}]`,
                         code: parseInt(amfi),
                         units: units,
                         nav: 0,
                         value: 0,
                         status: 'error'
-                    });
+                    };
                 }
-            }
+            });
+
+            // Wait for all requests to finish simultaneously
+            const results = await Promise.all(fetchPromises);
+            localizedCacheRows = results.filter(row => row !== undefined);
+
+            localizedCacheRows.forEach(row => {
+                if (row.status === 'success') {
+                    grandTotal += row.value;
+                    successCount++;
+                }
+            });
 
             globalMFCurrent = grandTotal;
             // For simple linear timeline compilation, assume MF maintains a 10% expected return
@@ -809,6 +820,7 @@
 
         // Run application on start
         window.addEventListener('DOMContentLoaded', () => {
+            // Initiate parallel loaders instantly
             calculatePortfolio();
             calculateEPF();
             calculateNPS();
