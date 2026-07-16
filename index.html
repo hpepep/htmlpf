@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="transition-colors duration-200">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,14 +9,16 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
         }
         th.sortable {
             cursor: pointer;
             user-select: none;
         }
         th.sortable:hover {
-            background-color: #f1f5f9;
+            background-color: rgba(241, 245, 249, 1);
+        }
+        .dark th.sortable:hover {
+            background-color: rgba(30, 41, 59, 1);
         }
         th.sortable::after {
             content: ' ↕';
@@ -24,30 +26,46 @@
             color: #94a3b8;
             opacity: 0.6;
         }
-        th.sort-asc::after { content: ' ↑'; color: #059669; opacity: 1; }
-        th.sort-desc::after { content: ' ↓'; color: #059669; opacity: 1; }
+        th.sort-asc::after { content: ' ↑'; color: #10b981; opacity: 1; }
+        th.sort-desc::after { content: ' ↓'; color: #10b981; opacity: 1; }
     </style>
+    <script>
+        // Check and apply theme immediately before page render to prevent "flashing"
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Top Navigation Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <header class="bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-200">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">₹</div>
-                <span class="font-bold text-lg tracking-tight text-slate-900">Retirement<span class="text-emerald-600">Planner</span></span>
+                <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Retirement<span class="text-emerald-600">Planner</span></span>
             </div>
-            <!-- Global JSON Upload/Download Utility -->
-            <div class="flex items-center space-x-2">
-                <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-300 cursor-pointer transition-colors">
-                    📥 Import State JSON
-                    <input type="file" accept=".json" class="hidden" onchange="importGlobalState(event)" />
-                </label>
-                <button onclick="exportGlobalState()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
-                    📤 Export State JSON
+            
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 w-9 h-9 rounded-lg flex items-center justify-center border border-slate-300 dark:border-slate-700 cursor-pointer transition-colors" title="Toggle Theme">
+                    <span id="themeIcon" class="text-sm">🌙</span>
                 </button>
-                <div class="text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1.5 rounded-full border border-slate-200">
-                    🔒 Private & Local
+
+                <!-- Global JSON Upload/Download Utility -->
+                <div class="hidden sm:flex items-center space-x-2">
+                    <label class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-300 dark:border-slate-700 cursor-pointer transition-colors">
+                        📥 Import JSON
+                        <input type="file" accept=".json" class="hidden" onchange="importGlobalState(event)" />
+                    </label>
+                    <button onclick="exportGlobalState()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
+                        📤 Export State
+                    </button>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                        🔒 Private
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,45 +76,45 @@
         <!-- GLOBAL CONFIGURATION CARD & OVERVIEW CARDS -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <!-- Global Parameters -->
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex flex-col justify-between transition-colors duration-200">
                 <div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Plan Horizon</span>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Plan Horizon</span>
                     <div class="mt-3 space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Retirement Year</label>
-                            <input type="number" id="retirementYear" value="2043" onchange="triggerGlobalRecalculation()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium text-slate-800" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Retirement Year</label>
+                            <input type="number" id="retirementYear" value="2043" onchange="triggerGlobalRecalculation()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium text-slate-800 dark:text-slate-100" />
                         </div>
                     </div>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjusting retirement horizon recalculates all cash flow projection tables dynamically.</p>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">Adjusting retirement horizon recalculates all cash flow projection tables dynamically.</p>
             </div>
 
             <!-- Aggregate Portfolio Value -->
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex flex-col justify-between transition-colors duration-200">
                 <div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cumulative Portfolio (Current)</span>
-                    <h3 id="cumulativeValue" class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cumulative Portfolio (Current)</span>
+                    <h3 id="cumulativeValue" class="text-2xl font-bold text-slate-900 dark:text-white mt-2 tracking-tight">₹0.00</h3>
                 </div>
-                <div class="text-[11px] text-emerald-600 font-medium mt-4 flex items-center space-x-1">
+                <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-4 flex items-center space-x-1">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                     <span>Consolidating all assets</span>
                 </div>
             </div>
 
             <!-- Future Projected Value at Retirement -->
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex flex-col justify-between transition-colors duration-200">
                 <div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected (Retirement Yr)</span>
-                    <h3 id="futureProjectedValue" class="text-2xl font-bold text-slate-950 mt-2 tracking-tight">₹0.00</h3>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Future Projected (Retirement Yr)</span>
+                    <h3 id="futureProjectedValue" class="text-2xl font-bold text-slate-950 dark:text-slate-100 mt-2 tracking-tight">₹0.00</h3>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-4">Based on respective asset interest rates.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-4">Based on respective asset interest rates.</p>
             </div>
 
             <!-- Active Assets breakdown mini bar graph/KPI -->
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex flex-col justify-between transition-colors duration-200">
                 <div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Quick Asset Allocation</span>
-                    <div class="space-y-1.5 mt-2 text-xs">
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Quick Asset Allocation</span>
+                    <div class="space-y-1.5 mt-2 text-xs text-slate-600 dark:text-slate-300">
                         <div class="flex justify-between"><span>MF:</span> <span class="font-mono font-medium" id="allocMF">₹0</span></div>
                         <div class="flex justify-between"><span>EPF:</span> <span class="font-mono font-medium" id="allocEPF">₹0</span></div>
                         <div class="flex justify-between"><span>NPS:</span> <span class="font-mono font-medium" id="allocNPS">₹0</span></div>
@@ -107,51 +125,51 @@
         </div>
 
         <!-- 6 TABS NAVIGATION BAR -->
-        <div class="border-b border-slate-200 bg-white rounded-xl p-1 shadow-2xs border flex flex-wrap gap-1">
-            <button onclick="switchTab('planTab')" id="btn-planTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs">
+        <div class="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl p-1 shadow-2xs flex flex-wrap gap-1 transition-colors duration-200">
+            <button onclick="switchTab('planTab')" id="btn-planTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 dark:text-white shadow-xs">
                 Retirement Plan
             </button>
-            <button onclick="switchTab('mfTab')" id="btn-mfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            <button onclick="switchTab('mfTab')" id="btn-mfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
                 Mutual Funds
             </button>
-            <button onclick="switchTab('epfTab')" id="btn-epfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            <button onclick="switchTab('epfTab')" id="btn-epfTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
                 EPF
             </button>
-            <button onclick="switchTab('npsTab')" id="btn-npsTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            <button onclick="switchTab('npsTab')" id="btn-npsTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
                 NPS
             </button>
-            <button onclick="switchTab('liqTab')" id="btn-liqTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            <button onclick="switchTab('liqTab')" id="btn-liqTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
                 Liquid
             </button>
-            <button onclick="switchTab('otherTab')" id="btn-otherTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            <button onclick="switchTab('otherTab')" id="btn-otherTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
                 Other
             </button>
         </div>
 
         <!-- -------------------- TAB CONTENT: RETIREMENT PLAN -------------------- -->
         <div id="planTab" class="tab-pane space-y-6">
-            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                <div class="border-b border-slate-200 px-5 py-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                <div class="border-b border-slate-200 dark:border-slate-800 px-5 py-4 bg-slate-50/50 dark:bg-slate-850/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <h3 class="font-bold text-sm text-slate-900">Expected Corpus Projection (2026 - 2043)</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Calculated based on starting values compounded annually (MF: 10%, EPF: Variable, NPS: Variable)</p>
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Expected Corpus Projection (2026 - 2043)</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Calculated based on starting values compounded annually (MF: 10%, EPF: Variable, NPS: Variable)</p>
                     </div>
-                    <div class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-semibold border border-emerald-100" id="targetYearBadge">
+                    <div class="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 px-3 py-1 rounded-md text-xs font-semibold border border-emerald-100 dark:border-emerald-900" id="targetYearBadge">
                         Target Year: 2043
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                 <th class="py-3 px-5">Year</th>
                                 <th class="py-3 px-5 text-right">Mutual Funds (10%)</th>
                                 <th class="py-3 px-5 text-right">EPF (Compound)</th>
                                 <th class="py-3 px-5 text-right">NPS (Compound)</th>
-                                <th class="py-3 px-5 text-right bg-emerald-50/40 text-emerald-800 font-semibold">Total Corpus</th>
+                                <th class="py-3 px-5 text-right bg-emerald-50/40 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 font-semibold">Total Corpus</th>
                             </tr>
                         </thead>
-                        <tbody id="planTableBody" class="divide-y divide-slate-100 text-sm font-mono">
+                        <tbody id="planTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono">
                             <!-- Dynamic Rows Go Here -->
                         </tbody>
                     </table>
@@ -163,23 +181,23 @@
         <div id="mfTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <!-- Collapsible Control Card -->
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                    <button onclick="toggleManageCard()" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
+                <div class="lg:col-span-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                    <button onclick="toggleManageCard()" class="w-full flex items-center justify-between p-4 bg-slate-50/70 dark:bg-slate-850/50 border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-left font-semibold text-sm text-slate-900 dark:text-white cursor-pointer">
                         <span class="flex items-center space-x-2">📂 <span>Manage Portfolio Data</span></span>
-                        <span id="toggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
+                        <span id="toggleIcon" class="text-xs text-slate-400 font-normal bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">Shrink ↑</span>
                     </button>
                     
                     <div id="manageCardContent" class="p-4 space-y-4">
                         <div>
-                            <p class="text-xs text-slate-500 mb-3">Upload your custom `.json` file, modify data rows, or pull a local backup.</p>
-                            <label class="flex flex-col items-center justify-center w-full h-14 border border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors mb-3">
-                                <span class="text-xs text-emerald-600 font-medium">Click to upload JSON</span>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Upload your custom `.json` file, modify data rows, or pull a local backup.</p>
+                            <label class="flex flex-col items-center justify-center w-full h-14 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mb-3">
+                                <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Click to upload JSON</span>
                                 <input type="file" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
                             </label>
-                            <textarea id="jsonInput" class="w-full h-48 p-2.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"></textarea>
+                            <textarea id="jsonInput" class="w-full h-48 p-2.5 text-xs font-mono bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"></textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="downloadJson()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-all border border-slate-300 cursor-pointer">Export JSON</button>
+                            <button onclick="downloadJson()" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-1.5 px-3 rounded-lg text-xs transition-all border border-slate-300 dark:border-slate-700 cursor-pointer">Export JSON</button>
                             <button onclick="calculatePortfolio()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer">Recalculate</button>
                         </div>
                     </div>
@@ -187,25 +205,24 @@
 
                 <!-- Live MF Valuation Summary Panel -->
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex items-center justify-between transition-colors duration-200">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mutual Fund Value</span>
-                            <h3 id="mfCurrentVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mutual Fund Value</span>
+                            <h3 id="mfCurrentVal" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹0.00</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
-                            <h4 id="totalFunds" class="text-xl font-bold text-slate-900">0</h4>
-                            <!-- Timestamp Placeholder -->
-                            <p id="lastUpdated" class="text-[10px] text-slate-400 mt-1 font-mono"></p>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Funds Tracked</span>
+                            <h4 id="totalFunds" class="text-xl font-bold text-slate-900 dark:text-white">0</h4>
+                            <p id="lastUpdated" class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-mono"></p>
                         </div>
                     </div>
 
                     <!-- Asset Grid Table -->
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse" id="mfTable">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                         <th class="py-3 px-4 font-medium sortable" onclick="sortMFTable(0, 'text')">Name</th>
                                         <th class="py-3 px-4 font-medium text-center sortable" onclick="sortMFTable(1, 'number')">AMFI</th>
                                         <th class="py-3 px-4 font-medium text-right sortable" onclick="sortMFTable(2, 'number')">Units</th>
@@ -213,7 +230,7 @@
                                         <th class="py-3 px-4 font-medium text-right sortable sort-desc" id="defaultMFSort" onclick="sortMFTable(4, 'number')">Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                                <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                                     <tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">Initializing...</td></tr>
                                 </tbody>
                             </table>
@@ -226,47 +243,47 @@
         <!-- -------------------- TAB CONTENT: EPF -------------------- -->
         <div id="epfTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">EPF Parameters</h3>
+                <div class="lg:col-span-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 transition-colors duration-200">
+                    <h3 class="font-semibold text-sm text-slate-900 dark:text-white">EPF Parameters</h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="epfCurrentVal" value="6600000" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Value (₹)</label>
+                            <input type="number" id="epfCurrentVal" value="6600000" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                            <input type="number" id="epfCurrentYear" value="2026" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Year</label>
+                            <input type="number" id="epfCurrentYear" value="2026" oninput="rebuildEPFTable()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex justify-between items-center transition-colors duration-200">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
-                            <h3 id="epfHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹66,00,000</h3>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="epfHeaderVal" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹66,00,000</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
-                            <h4 id="epfHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="epfHeaderProj" class="text-xl font-bold text-slate-800 dark:text-emerald-400">₹0.00</h4>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
-                            <span class="font-semibold text-xs text-slate-900">EPF Compounding Timeline Projections</span>
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                        <div class="border-b border-slate-200 dark:border-slate-800 px-5 py-3 bg-slate-50/50 dark:bg-slate-850/50">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">EPF Compounding Timeline Projections</span>
                         </div>
                         <div class="overflow-y-auto max-h-96">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
                                         <th class="py-3 px-5 text-center w-32">Interest (%)</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="epfTableBody" class="divide-y divide-slate-100 text-sm font-mono"></tbody>
+                                <tbody id="epfTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono"></tbody>
                             </table>
                         </div>
                     </div>
@@ -277,47 +294,47 @@
         <!-- -------------------- TAB CONTENT: NPS -------------------- -->
         <div id="npsTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">NPS Parameters</h3>
+                <div class="lg:col-span-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 transition-colors duration-200">
+                    <h3 class="font-semibold text-sm text-slate-900 dark:text-white">NPS Parameters</h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="npsCurrentVal" value="1900000" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Value (₹)</label>
+                            <input type="number" id="npsCurrentVal" value="1900000" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                            <input type="number" id="npsCurrentYear" value="2026" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Year</label>
+                            <input type="number" id="npsCurrentYear" value="2026" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex justify-between items-center transition-colors duration-200">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
-                            <h3 id="npsHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹19,00,000</h3>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="npsHeaderVal" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹19,00,000</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
-                            <h4 id="npsHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="npsHeaderProj" class="text-xl font-bold text-slate-800 dark:text-emerald-400">₹0.00</h4>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
-                            <span class="font-semibold text-xs text-slate-900">NPS Compounding Timeline Projections</span>
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                        <div class="border-b border-slate-200 dark:border-slate-800 px-5 py-3 bg-slate-50/50 dark:bg-slate-850/50">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">NPS Compounding Timeline Projections</span>
                         </div>
                         <div class="overflow-y-auto max-h-96">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
                                         <th class="py-3 px-5 text-center w-32">Interest (%)</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="npsTableBody" class="divide-y divide-slate-100 text-sm font-mono"></tbody>
+                                <tbody id="npsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono"></tbody>
                             </table>
                         </div>
                     </div>
@@ -328,52 +345,52 @@
         <!-- -------------------- TAB CONTENT: LIQUID -------------------- -->
         <div id="liqTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">Liquid Compound Parameters</h3>
+                <div class="lg:col-span-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 transition-colors duration-200">
+                    <h3 class="font-semibold text-sm text-slate-900 dark:text-white">Liquid Compound Parameters</h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="liqCurrentVal" value="0" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Value (₹)</label>
+                            <input type="number" id="liqCurrentVal" value="0" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                                <input type="number" id="liqCurrentYear" value="2026" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Year</label>
+                                <input type="number" id="liqCurrentYear" value="2026" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
-                                <input type="number" step="0.1" id="liqInterest" value="6" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Interest Rate (%)</label>
+                                <input type="number" step="0.1" id="liqInterest" value="6" oninput="calculateLiquid()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex justify-between items-center transition-colors duration-200">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
-                            <h3 id="liqHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="liqHeaderVal" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹0.00</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
-                            <h4 id="liqHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="liqHeaderProj" class="text-xl font-bold text-slate-800 dark:text-emerald-400">₹0.00</h4>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
-                            <span class="font-semibold text-xs text-slate-900">Liquid Asset Timeline Projections</span>
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                        <div class="border-b border-slate-200 dark:border-slate-800 px-5 py-3 bg-slate-50/50 dark:bg-slate-850/50">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">Liquid Asset Timeline Projections</span>
                         </div>
                         <div class="overflow-y-auto max-h-96">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="liqTableBody" class="divide-y divide-slate-100 text-sm font-mono"></tbody>
+                                <tbody id="liqTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono"></tbody>
                             </table>
                         </div>
                     </div>
@@ -384,52 +401,52 @@
         <!-- -------------------- TAB CONTENT: OTHER -------------------- -->
         <div id="otherTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">Other Asset Compound Parameters</h3>
+                <div class="lg:col-span-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 transition-colors duration-200">
+                    <h3 class="font-semibold text-sm text-slate-900 dark:text-white">Other Asset Compound Parameters</h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="otherCurrentVal" value="0" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Value (₹)</label>
+                            <input type="number" id="otherCurrentVal" value="0" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                                <input type="number" id="otherCurrentYear" value="2026" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Year</label>
+                                <input type="number" id="otherCurrentYear" value="2026" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Interest Rate (%)</label>
-                                <input type="number" step="0.1" id="otherInterest" value="6" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Interest Rate (%)</label>
+                                <input type="number" step="0.1" id="otherInterest" value="6" oninput="calculateOther()" class="w-full p-2 text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 shadow-xs flex justify-between items-center transition-colors duration-200">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
-                            <h3 id="otherHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Value (Current Yr)</span>
+                            <h3 id="otherHeaderVal" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹0.00</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
-                            <h4 id="otherHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Future Projected Val</span>
+                            <h4 id="otherHeaderProj" class="text-xl font-bold text-slate-800 dark:text-emerald-400">₹0.00</h4>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
-                            <span class="font-semibold text-xs text-slate-900">Other Asset Timeline Projections</span>
+                    <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors duration-200">
+                        <div class="border-b border-slate-200 dark:border-slate-800 px-5 py-3 bg-slate-50/50 dark:bg-slate-850/50">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">Other Asset Timeline Projections</span>
                         </div>
                         <div class="overflow-y-auto max-h-96">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">
                                         <th class="py-3 px-5">Year</th>
                                         <th class="py-3 px-5 text-right">Interest Earned</th>
                                         <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="otherTableBody" class="divide-y divide-slate-100 text-sm font-mono"></tbody>
+                                <tbody id="otherTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono"></tbody>
                             </table>
                         </div>
                     </div>
@@ -439,11 +456,29 @@
 
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-12">
+    <footer class="bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 py-6 text-center text-xs text-slate-400 dark:text-slate-500 mt-12 transition-colors duration-200">
         <p>© 2026 · Integrated Retirement Portfolio Tracker Workspace.</p>
     </footer>
 
     <script>
+        // Theme Switcher Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                themeIcon.textContent = '🌙';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.textContent = '☀️';
+            }
+            // Update active tab buttons styling state upon toggle
+            updateTabStyling();
+        }
+
         // Global variables holding calculated sums
         let globalMFCurrent = 0;
         let globalEPFCurrent = 6600000;
@@ -458,8 +493,8 @@
         let globalOtherFuture = 0;
 
         // Custom local cache maps for storing year-specific user inputs
-        let epfInterestRates = {}; // Format: { year: rate }
-        let npsInterestRates = {}; // Format: { year: rate }
+        let epfInterestRates = {}; 
+        let npsInterestRates = {}; 
 
         // Raw local datasets for parsing
         const initialDataset = {
@@ -480,21 +515,32 @@
 
         let localizedCacheRows = [];
         let runningSortDirection = { colIndex: 4, order: 'desc' };
+        let currentTab = 'planTab';
 
         document.getElementById('jsonInput').value = JSON.stringify(initialDataset, null, 4);
 
         // Core UI Navigation Logic
         function switchTab(activeTabId) {
+            currentTab = activeTabId;
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.getElementById(activeTabId).classList.remove('hidden');
+            updateTabStyling();
+        }
 
+        function updateTabStyling() {
+            const isDark = document.documentElement.classList.contains('dark');
             document.querySelectorAll('[id^="btn-"]').forEach(btn => {
-                btn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+                const btnId = btn.id.replace('btn-', '');
+                if (btnId === currentTab) {
+                    if (isDark) {
+                        btn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-emerald-600 text-white shadow-xs";
+                    } else {
+                        btn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs";
+                    }
+                } else {
+                    btn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800";
+                }
             });
-            const activeBtn = document.getElementById('btn-' + activeTabId);
-            if (activeBtn) {
-                activeBtn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs";
-            }
         }
 
         // Collapse/Expand Manage Card
@@ -549,7 +595,7 @@
             const keys = Object.keys(mfList);
             
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs animate-pulse">Fetching real-time NAVs...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs animate-pulse">Fetching real-time NAVs...</td></tr>`;
 
             localizedCacheRows = [];
             globalMFCurrent = 0;
@@ -593,7 +639,9 @@
 
         function sortMFTable(colIndex, type) {
             const headers = document.querySelectorAll('#mfTable th');
-            headers.forEach(h => h.className = "py-3 px-4 font-medium sortable");
+            headers.forEach(h => {
+                h.className = "py-3 px-4 font-medium sortable";
+            });
 
             const clickedHeader = headers[colIndex];
             if (runningSortDirection.colIndex === colIndex) {
@@ -630,19 +678,19 @@
             tbody.innerHTML = '';
             
             if (localizedCacheRows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">No mutual fund assets configured.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">No mutual fund assets configured.</td></tr>`;
                 return;
             }
 
             localizedCacheRows.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors";
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-medium text-slate-900">${row.name}</td>
-                    <td class="py-3 px-4 text-center text-slate-500 font-mono">${row.code}</td>
+                    <td class="py-3 px-4 font-medium text-slate-900 dark:text-white">${row.name}</td>
+                    <td class="py-3 px-4 text-center text-slate-500 dark:text-slate-400 font-mono">${row.code}</td>
                     <td class="py-3 px-4 text-right font-mono">${row.units.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    <td class="py-3 px-4 text-right font-mono text-emerald-700">₹${row.nav.toFixed(2)}</td>
-                    <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900">₹${row.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-700 dark:text-emerald-400">₹${row.nav.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">₹${row.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -742,7 +790,7 @@
             reader.readAsText(file);
         }
 
-        // EPF logic containing inline editable inputs
+        // EPF variable inputs
         function updateEPFInterestRate(year, inputElement) {
             const val = parseFloat(inputElement.value);
             if (!isNaN(val)) {
@@ -765,31 +813,31 @@
 
             let runningValue = globalEPFCurrent;
             for (let year = currentYear; year <= retirementYear; year++) {
-                if (epfInterestRates[year] === undefined) epfInterestRates[year] = 7.0; // Default interest
+                if (epfInterestRates[year] === undefined) epfInterestRates[year] = 7.0; 
                 const rate = epfInterestRates[year];
                 const interestEarned = runningValue * (rate / 100);
                 const closingValue = runningValue + interestEarned;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-5 font-semibold text-slate-800">${year}</td>
+                    <td class="py-2.5 px-5 font-semibold text-slate-800 dark:text-slate-100">${year}</td>
                     <td class="py-2.5 px-5 text-center">
-                        <input type="number" step="0.01" value="${rate}" onchange="updateEPFInterestRate(${year}, this)" class="w-16 p-1 text-xs text-center font-medium bg-slate-50 border border-slate-200 rounded-md focus:ring-1 focus:ring-slate-300" />
+                        <input type="number" step="0.01" value="${rate}" onchange="updateEPFInterestRate(${year}, this)" class="w-16 p-1 text-xs text-center font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-md focus:ring-1 focus:ring-slate-300" />
                     </td>
-                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600">+${formatINR(interestEarned)}</td>
-                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900">${formatINR(closingValue)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600 dark:text-emerald-400">+${formatINR(interestEarned)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">${formatINR(closingValue)}</td>
                 `;
                 tbody.appendChild(tr);
                 
-                if (year === retirementYear) globalEPFFuture = runningValue; // Future Projected at retirement year
+                if (year === retirementYear) globalEPFFuture = runningValue; 
                 runningValue = closingValue;
             }
             document.getElementById('epfHeaderProj').textContent = formatINR(globalEPFFuture);
             updateAggregates();
         }
 
-        // NPS logic containing inline editable inputs
+        // NPS variable inputs
         function updateNPSInterestRate(year, inputElement) {
             const val = parseFloat(inputElement.value);
             if (!isNaN(val)) {
@@ -812,20 +860,20 @@
 
             let runningValue = globalNPSCurrent;
             for (let year = currentYear; year <= retirementYear; year++) {
-                if (npsInterestRates[year] === undefined) npsInterestRates[year] = 9.0; // Default interest
+                if (npsInterestRates[year] === undefined) npsInterestRates[year] = 9.0; 
                 const rate = npsInterestRates[year];
                 const interestEarned = runningValue * (rate / 100);
                 const closingValue = runningValue + interestEarned;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-5 font-semibold text-slate-800">${year}</td>
+                    <td class="py-2.5 px-5 font-semibold text-slate-800 dark:text-slate-100">${year}</td>
                     <td class="py-2.5 px-5 text-center">
-                        <input type="number" step="0.01" value="${rate}" onchange="updateNPSInterestRate(${year}, this)" class="w-16 p-1 text-xs text-center font-medium bg-slate-50 border border-slate-200 rounded-md focus:ring-1 focus:ring-slate-300" />
+                        <input type="number" step="0.01" value="${rate}" onchange="updateNPSInterestRate(${year}, this)" class="w-16 p-1 text-xs text-center font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-md focus:ring-1 focus:ring-slate-300" />
                     </td>
-                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600">+${formatINR(interestEarned)}</td>
-                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900">${formatINR(closingValue)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600 dark:text-emerald-400">+${formatINR(interestEarned)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">${formatINR(closingValue)}</td>
                 `;
                 tbody.appendChild(tr);
 
@@ -855,11 +903,11 @@
                 const closingValue = runningValue + interestEarned;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-5 font-semibold text-slate-800">${year}</td>
-                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600">+${formatINR(interestEarned)}</td>
-                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900">${formatINR(closingValue)}</td>
+                    <td class="py-2.5 px-5 font-semibold text-slate-800 dark:text-slate-100">${year}</td>
+                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600 dark:text-emerald-400">+${formatINR(interestEarned)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">${formatINR(closingValue)}</td>
                 `;
                 tbody.appendChild(tr);
 
@@ -890,11 +938,11 @@
                 const closingValue = runningValue + interestEarned;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-5 font-semibold text-slate-800">${year}</td>
-                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600">+${formatINR(interestEarned)}</td>
-                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900">${formatINR(closingValue)}</td>
+                    <td class="py-2.5 px-5 font-semibold text-slate-800 dark:text-slate-100">${year}</td>
+                    <td class="py-2.5 px-5 text-right font-mono text-emerald-600 dark:text-emerald-400">+${formatINR(interestEarned)}</td>
+                    <td class="py-2.5 px-5 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">${formatINR(closingValue)}</td>
                 `;
                 tbody.appendChild(tr);
 
@@ -906,7 +954,7 @@
             triggerGlobalRecalculation();
         }
 
-        // Global Orchestrator mapping compounding paths into the main summary Plan tab
+        // Global Orchestrator
         function triggerGlobalRecalculation() {
             const retirementYear = parseInt(document.getElementById('retirementYear').value) || 2043;
             document.getElementById('targetYearBadge').textContent = `Target Year: ${retirementYear}`;
@@ -914,7 +962,6 @@
             const planBody = document.getElementById('planTableBody');
             planBody.innerHTML = '';
 
-            // Compute dynamic progression profiles year-on-year
             const startYear = 2026;
             
             let runningMF = globalMFCurrent;
@@ -922,7 +969,6 @@
             let runningNPS = parseFloat(document.getElementById('npsCurrentVal').value) || 0;
 
             for (let year = startYear; year <= retirementYear; year++) {
-                // Compounding steps
                 const mfRate = 0.10;
                 const epfRate = (epfInterestRates[year] || 7.0) / 100;
                 const npsRate = (npsInterestRates[year] || 9.0) / 100;
@@ -934,24 +980,22 @@
                 const totalCorpus = runningMF + runningEPF + runningNPS;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800";
                 tr.innerHTML = `
-                    <td class="py-3.5 px-5 font-bold text-slate-900">${year}</td>
-                    <td class="py-3.5 px-5 text-right text-slate-700">${formatINR(runningMF)}</td>
-                    <td class="py-3.5 px-5 text-right text-slate-700">${formatINR(runningEPF)}</td>
-                    <td class="py-3.5 px-5 text-right text-slate-700">${formatINR(runningNPS)}</td>
-                    <td class="py-3.5 px-5 text-right font-bold text-emerald-800 bg-emerald-50/20">${formatINR(totalCorpus)}</td>
+                    <td class="py-3.5 px-5 font-bold text-slate-900 dark:text-white">${year}</td>
+                    <td class="py-3.5 px-5 text-right text-slate-700 dark:text-slate-300">${formatINR(runningMF)}</td>
+                    <td class="py-3.5 px-5 text-right text-slate-700 dark:text-slate-300">${formatINR(runningEPF)}</td>
+                    <td class="py-3.5 px-5 text-right text-slate-700 dark:text-slate-300">${formatINR(runningNPS)}</td>
+                    <td class="py-3.5 px-5 text-right font-bold text-emerald-800 dark:text-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/10">${formatINR(totalCorpus)}</td>
                 `;
                 planBody.appendChild(tr);
 
-                // Save ending values
                 if (year === retirementYear) {
                     globalMFFuture = runningMF;
                     globalEPFFuture = runningEPF;
                     globalNPSFuture = runningNPS;
                 }
 
-                // Advance to next iteration
                 runningMF = closingMF;
                 runningEPF = closingEPF;
                 runningNPS = closingNPS;
@@ -962,11 +1006,16 @@
 
         // Initialize state on window load
         window.onload = async function() {
+            // Setup initial theme icon UI state based on loaded class
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+            
+            updateTabStyling();
             rebuildEPFTable();
             rebuildNPSTable();
             calculateLiquid();
             calculateOther();
-            await calculatePortfolio(); // Resolves MF loading
+            await calculatePortfolio(); 
         }
     </script>
 </body>
