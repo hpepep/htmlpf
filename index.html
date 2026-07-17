@@ -77,10 +77,13 @@
                     <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cumulative Portfolio (Current)</span>
                     <h3 id="cumulativeValue" class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">₹0.00</h3>
                 </div>
-                <!-- Dynamic Target Comparison Subtitle Info -->
-                <div id="targetComparisonInfo" class="text-[11px] font-medium mt-4 flex items-center space-x-1">
-                    <span class="w-2 h-2 rounded-full bg-slate-400 inline-block"></span>
-                    <span>Calculating baseline comparisons...</span>
+                <div class="text-[11px] font-medium mt-4 flex flex-col space-y-1">
+                    <div class="flex items-center space-x-1 text-emerald-600">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span>Consolidating all assets</span>
+                    </div>
+                    <!-- Performance status display -->
+                    <span id="targetStatus" class="text-xs font-semibold mt-1"></span>
                 </div>
             </div>
 
@@ -531,39 +534,19 @@
             document.getElementById('allocNPS').innerText = `₹${globalNPSCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocLiqOther').innerText = `₹${(globalLiqCurrent + globalOtherCurrent).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
-            // Calculate Target Horizon variance metrics (Baseline comparison)
-            calculatePlanVariance(currentTotal, projectedTotal);
-        }
-
-        // Dynamic Variance Analyzer for the Cumulative Value Card
-        function calculatePlanVariance(currentTotal, projectedTotal) {
-            const infoContainer = document.getElementById('targetComparisonInfo');
-            if (!infoContainer) return;
-
-            if (projectedTotal === 0) {
-                infoContainer.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400 inline-block"></span><span>No projected endpoint corpus setup</span>`;
-                infoContainer.className = "text-[11px] font-medium mt-4 text-slate-500 flex items-center space-x-1";
-                return;
-            }
-
-            // Target Baseline: Calculate target expectation based on plan configuration variables
-            let expectedMFBaseline = globalMFCurrent || 7100000;
-            let expectedEPFBaseline = globalEPFCurrent || 6600000;
-            let expectedNPSBaseline = globalNPSCurrent || 1900000;
-            let expectedTotalBaseline = expectedMFBaseline + expectedEPFBaseline + expectedNPSBaseline;
-
-            // Compute current achievement metric vs the long-term goal
-            const actualPctOfRetirement = (currentTotal / projectedTotal) * 100;
-            const expectedPctOfRetirement = (expectedTotalBaseline / projectedTotal) * 100;
-            const variance = actualPctOfRetirement - expectedPctOfRetirement;
-            const absVariance = Math.abs(variance).toFixed(2);
-
-            if (variance >= 0) {
-                infoContainer.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span><span>Ahead by ${absVariance}% vs expectation</span>`;
-                infoContainer.className = "text-[11px] font-medium mt-4 text-emerald-600 flex items-center space-x-1";
-            } else {
-                infoContainer.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span><span>Lagging by ${absVariance}% vs expectation</span>`;
-                infoContainer.className = "text-[11px] font-medium mt-4 text-amber-600 flex items-center space-x-1";
+            // Expected Dynamic Target Progression calculation for Current Year
+            const expectedTotal2026 = (globalMFCurrent || 7100000) + (globalEPFCurrent || 6600000) + (globalNPSCurrent || 1900000);
+            
+            if (expectedTotal2026 > 0) {
+                const diffPercent = ((currentTotal - expectedTotal2026) / expectedTotal2026) * 100;
+                const statusEl = document.getElementById('targetStatus');
+                if (diffPercent >= 0) {
+                    statusEl.innerText = `Ahead by ${diffPercent.toFixed(1)}%`;
+                    statusEl.className = "text-xs font-semibold mt-1 text-emerald-600";
+                } else {
+                    statusEl.innerText = `Lagging by ${Math.abs(diffPercent).toFixed(1)}%`;
+                    statusEl.className = "text-xs font-semibold mt-1 text-rose-600";
+                }
             }
         }
 
@@ -792,6 +775,7 @@
             reader.readAsText(file);
         }
 
+        // Dynamic State JSON Download
         function downloadJson() {
             const currentText = document.getElementById('jsonInput').value;
             try {
@@ -858,7 +842,7 @@
                         const currentValue = units * currentNav;
 
                         return {
-                            name: schemaName,
+                            name: schemeName,
                             code: parseInt(amfi),
                             units: units,
                             nav: currentNav,
@@ -914,7 +898,6 @@
             updateGlobalOverview();
         }
 
-        // ... Keep existing renderMFTable, sortMFTable, applySort, exportGlobalState, importGlobalState functions exactly as they were ...
         function renderMFTable() {
             const tableBody = document.getElementById('tableBody');
             if (!tableBody) return;
@@ -984,6 +967,7 @@
             renderMFTable();
         }
 
+        // -------------------- GLOBAL STATE IMPORT/EXPORT --------------------
         function exportGlobalState() {
             let mfParsedData = {};
             try {
@@ -1035,27 +1019,41 @@
             reader.onload = function(e) {
                 try {
                     const state = JSON.parse(e.target.result);
+                    
+                    // Validate file minimum keys
                     if (!state.epf || !state.nps || !state.mutual_funds_raw) {
                         alert("Invalid Global State file format.");
                         return;
                     }
+
+                    // Restore state properties to fields safely
                     document.getElementById('retirementYear').value = state.retirementYear || 2043;
                     document.getElementById('jsonInput').value = JSON.stringify(state.mutual_funds_raw, null, 4);
+
+                    // Restore EPF
                     document.getElementById('epfCurrentVal').value = state.epf.currentVal;
                     document.getElementById('epfCurrentYear').value = state.epf.currentYear;
                     epfInterestRates = state.epf.interestRates || {};
+
+                    // Restore NPS
                     document.getElementById('npsCurrentVal').value = state.nps.currentVal;
                     document.getElementById('npsCurrentYear').value = state.nps.currentYear;
                     npsInterestRates = state.nps.interestRates || {};
+
+                    // Restore Liquid
                     document.getElementById('liqCurrentVal').value = state.liquid.currentVal;
                     document.getElementById('liqCurrentYear').value = state.liquid.currentYear;
                     document.getElementById('liqInterest').value = state.liquid.interest;
+
+                    // Restore Other
                     document.getElementById('otherCurrentVal').value = state.other.currentVal;
                     document.getElementById('otherCurrentYear').value = state.other.currentYear;
                     document.getElementById('otherInterest').value = state.other.interest;
 
+                    // Re-calculate everything cleanly
                     triggerGlobalRecalculation();
                     calculatePortfolio();
+
                     alert("Application state imported successfully!");
                 } catch (err) {
                     alert("Unable to parse state JSON file: " + err.message);
@@ -1072,7 +1070,7 @@
             calculateLiquid();
             calculateOther();
             generateRetirementPlan();
-            switchTab('planTab');
+            switchTab('planTab'); // Default to the newly added Retirement Plan tab
         });
     </script>
 </body>
