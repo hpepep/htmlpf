@@ -122,7 +122,7 @@
                 EPF
             </button>
             <button onclick="switchTab('npsTab')" id="btn-npsTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
-                NPS
+                NPS Portfolio
             </button>
             <button onclick="switchTab('liqTab')" id="btn-liqTab" class="flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50">
                 Liquid
@@ -168,18 +168,14 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <!-- Collapsible Control Card -->
                 <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                    <button onclick="toggleManageCard()" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
-                        <span class="flex items-center space-x-2">📂 <span>Manage Portfolio Data</span></span>
-                        <span id="toggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
+                    <button onclick="toggleManageCard('mfManageContent', 'mfToggleIcon')" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
+                        <span class="flex items-center space-x-2">📂 <span>Manage MF Data</span></span>
+                        <span id="mfToggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
                     </button>
                     
-                    <div id="manageCardContent" class="p-4 space-y-4">
+                    <div id="mfManageContent" class="p-4 space-y-4">
                         <div>
-                            <p class="text-xs text-slate-500 mb-3">Upload your custom `.json` file, modify data rows, or pull a local backup.</p>
-                            <label class="flex flex-col items-center justify-center w-full h-14 border border-dashed border-slate-200 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors mb-3">
-                                <span class="text-xs text-emerald-600 font-medium">Click to upload JSON</span>
-                                <input type="file" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
-                            </label>
+                            <p class="text-xs text-slate-500 mb-3">Modify data rows or paste your custom AMFI unit structures below.</p>
                             <textarea id="jsonInput" class="w-full h-48 p-2.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"></textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
@@ -199,7 +195,6 @@
                         <div class="text-right">
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Funds Tracked</span>
                             <h4 id="totalFunds" class="text-xl font-bold text-slate-900">0</h4>
-                            <!-- Timestamp Placeholder -->
                             <p id="lastUpdated" class="text-[10px] text-slate-400 mt-1 font-mono"></p>
                         </div>
                     </div>
@@ -278,50 +273,56 @@
             </div>
         </div>
 
-        <!-- -------------------- TAB CONTENT: NPS -------------------- -->
+        <!-- -------------------- TAB CONTENT: NPS PORTFOLIO BREAKDOWN -------------------- -->
         <div id="npsTab" class="tab-pane hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-                    <h3 class="font-semibold text-sm text-slate-900">NPS Parameters</h3>
-                    <div class="space-y-3">
+                <!-- Collapsible Control Card -->
+                <div class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                    <button onclick="toggleManageCard('npsManageContent', 'npsToggleIcon')" class="w-full flex items-center justify-between p-4 bg-slate-50/70 border-b border-slate-200 hover:bg-slate-50 text-left font-semibold text-sm text-slate-900 cursor-pointer">
+                        <span class="flex items-center space-x-2">📂 <span>Manage NPS Schemes</span></span>
+                        <span id="npsToggleIcon" class="text-xs text-slate-400 font-normal bg-white border border-slate-200 px-2 py-0.5 rounded-md">Shrink ↑</span>
+                    </button>
+                    
+                    <div id="npsManageContent" class="p-4 space-y-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Value (₹)</label>
-                            <input type="number" id="npsCurrentVal" value="1900000" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
+                            <p class="text-xs text-slate-500 mb-3">Modify your specific NPS Schemes, units, and custom NAV values here:</p>
+                            <textarea id="npsJsonInput" class="w-full h-56 p-2.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"></textarea>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Current Year</label>
-                            <input type="number" id="npsCurrentYear" value="2026" oninput="rebuildNPSTable()" class="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none" />
-                        </div>
+                        <button onclick="calculateNpsPortfolio()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-all cursor-pointer">Update NPS Balances</button>
                     </div>
                 </div>
 
+                <!-- Live NPS Valuation Summary & Breakdown Panel -->
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex justify-between items-center">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
                         <div>
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Value (Current Yr)</span>
-                            <h3 id="npsHeaderVal" class="text-2xl font-bold text-slate-900 mt-1">₹19,00,000</h3>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">NPS Holding Value (Current)</span>
+                            <h3 id="npsCurrentValHeader" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected Val</span>
-                            <h4 id="npsHeaderProj" class="text-xl font-bold text-slate-800">₹0.00</h4>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Future Projected (Retirement)</span>
+                            <h4 id="npsProjectedValHeader" class="text-xl font-bold text-emerald-600">₹0.00</h4>
                         </div>
                     </div>
 
+                    <!-- Individual Schemes Table Grid -->
                     <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
                         <div class="border-b border-slate-200 px-5 py-3 bg-slate-50/50">
-                            <span class="font-semibold text-xs text-slate-900">NPS Compounding Timeline Projections</span>
+                            <span class="font-semibold text-xs text-slate-900">Current Value Breakdown by Asset Class</span>
                         </div>
-                        <div class="overflow-y-auto max-h-96">
+                        <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium text-xs uppercase">
-                                        <th class="py-3 px-5">Year</th>
-                                        <th class="py-3 px-5 text-center w-32">Interest (%)</th>
-                                        <th class="py-3 px-5 text-right">Interest Earned</th>
-                                        <th class="py-3 px-5 text-right">Closing Portfolio Value</th>
+                                        <th class="py-3 px-4 font-medium">Scheme Name</th>
+                                        <th class="py-3 px-4 font-medium text-right">Units</th>
+                                        <th class="py-3 px-4 font-medium text-right">NAV (₹)</th>
+                                        <th class="py-3 px-4 font-medium text-right">Current Value</th>
                                     </tr>
                                 </thead>
-                                <tbody id="npsTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                                <tbody id="npsTableBody" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Dynamic NPS rows will output here -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -451,7 +452,7 @@
         // Global variables holding calculated sums
         let globalMFCurrent = 0;
         let globalEPFCurrent = 6600000;
-        let globalNPSCurrent = 1900000;
+        let globalNPSCurrent = 0; 
         let globalLiqCurrent = 0;
         let globalOtherCurrent = 0;
 
@@ -461,11 +462,9 @@
         let globalLiqFuture = 0;
         let globalOtherFuture = 0;
 
-        // Custom local cache maps for storing year-specific user inputs
-        let epfInterestRates = {}; // Format: { year: rate }
-        let npsInterestRates = {}; // Format: { year: rate }
+        let epfInterestRates = {}; 
 
-        // Raw local datasets for parsing
+        // Raw local datasets for Mutual Funds
         const initialDataset = {
             "mutual_funds": {
                 "119065": { "units": 1205.254 },
@@ -482,12 +481,34 @@
             }
         };
 
+        // Custom local dataset for NPS Schemes with target units & current benchmark NAV indices
+        const initialNpsDataset = {
+            "nps_funds": {
+                "HDFC_E": {
+                    "name": "HDFC PENSION FUND MANAGEMENT LIMITED SCHEME E - TIER I POP",
+                    "units": 27601.1971,
+                    "nav": 53.4965
+                },
+                "HDFC_C": {
+                    "name": "HDFC PENSION FUND MANAGEMENT LIMITED SCHEME C - TIER I POP",
+                    "units": 13507.3844,
+                    "nav": 30.7678
+                },
+                "HDFC_G": {
+                    "name": "HDFC PENSION FUND MANAGEMENT LIMITED SCHEME G - TIER I POP",
+                    "units": 3551.4453,
+                    "nav": 28.9269
+                }
+            }
+        };
+
         let localizedCacheRows = [];
         let runningSortDirection = { colIndex: 4, order: 'desc' };
 
         document.getElementById('jsonInput').value = JSON.stringify(initialDataset, null, 4);
+        document.getElementById('npsJsonInput').value = JSON.stringify(initialNpsDataset, null, 4);
 
-        // Core UI Navigation Logic
+        // UI Navigation Logic
         function switchTab(activeTabId) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.getElementById(activeTabId).classList.remove('hidden');
@@ -499,9 +520,9 @@
             activeBtn.className = "flex-grow sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer bg-slate-900 text-white shadow-xs";
         }
 
-        function toggleManageCard() {
-            const content = document.getElementById('manageCardContent');
-            const icon = document.getElementById('toggleIcon');
+        function toggleManageCard(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
             if (content.classList.contains('hidden')) {
                 content.classList.remove('hidden');
                 icon.innerText = "Shrink ↑";
@@ -514,7 +535,7 @@
         // Global Updater logic
         function triggerGlobalRecalculation() {
             rebuildEPFTable();
-            rebuildNPSTable();
+            calculateNpsPortfolio();
             calculateLiquid();
             calculateOther();
             generateRetirementPlan();
@@ -528,15 +549,12 @@
             document.getElementById('cumulativeValue').innerText = `₹${currentTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
             document.getElementById('futureProjectedValue').innerText = `₹${projectedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
-            // Allocation labels
             document.getElementById('allocMF').innerText = `₹${globalMFCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocEPF').innerText = `₹${globalEPFCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocNPS').innerText = `₹${globalNPSCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             document.getElementById('allocLiqOther').innerText = `₹${(globalLiqCurrent + globalOtherCurrent).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
-            // Dynamic Target Progression comparison for the Current Year (2026)
-            // Expected target for current year (2026) is the baseline starting sum of all assets
-            const expectedTotalCurrentYear = 7100000 + 6600000 + 1900000; // ₹1,56,00,000
+            const expectedTotalCurrentYear = 7100000 + 6600000 + 1900000; 
             
             if (expectedTotalCurrentYear > 0) {
                 const diffPercent = ((currentTotal - expectedTotalCurrentYear) / expectedTotalCurrentYear) * 100;
@@ -576,7 +594,6 @@
                         <td class="py-3 px-5 text-right bg-emerald-50/30 text-emerald-700 font-bold">₹${totalCorpus.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                     </tr>`;
 
-                // Compound values for the next iteration (Year-on-Year compounding)
                 mfVal *= 1.10;
                 epfVal *= 1.07;
                 npsVal *= 1.09;
@@ -585,7 +602,7 @@
             planTableBody.innerHTML = rowsHtml;
         }
 
-        // -------------------- COMPOUND CALCULATOR PARSERS --------------------
+        // -------------------- COMPOUND TIMELINE GENERATORS --------------------
         function computeCompoundingTimeline(currentVal, startYear, endYear, rate) {
             let list = [];
             let val = currentVal;
@@ -648,57 +665,56 @@
             rebuildEPFTable();
         }
 
+        // -------------------- DYNAMIC CUSTOM NPS LOGIC --------------------
+        function calculateNpsPortfolio() {
+            const npsJsonInputEl = document.getElementById('npsJsonInput');
+            const npsTableBody = document.getElementById('npsTableBody');
+            if (!npsJsonInputEl || !npsTableBody) return;
 
-        // -------------------- DYNAMIC NPS SYSTEM LOGIC --------------------
-        function rebuildNPSTable() {
-            const currentVal = parseFloat(document.getElementById('npsCurrentVal').value) || 0;
-            const startYear = parseInt(document.getElementById('npsCurrentYear').value) || 2026;
-            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
-
-            globalNPSCurrent = currentVal;
-            document.getElementById('npsHeaderVal').innerText = `₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-
-            const tbody = document.getElementById('npsTableBody');
-            let rowsHtml = '';
-            let val = currentVal;
-
-            for (let year = startYear; year <= rYear; year++) {
-                if (npsInterestRates[year] === undefined) {
-                    npsInterestRates[year] = 9.0;
-                }
-                const currentRate = npsInterestRates[year];
-                const interestEarned = val * (currentRate / 100);
-                const closingValue = val + interestEarned;
-
-                rowsHtml += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-3 px-5 font-medium text-slate-900">${year}</td>
-                        <td class="py-2 px-5 text-center">
-                            <input type="number" step="0.1" value="${currentRate}" 
-                                   oninput="updateNPSRate(${year}, this.value)" 
-                                   class="w-20 p-1 text-center font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
-                        </td>
-                        <td class="py-3 px-5 text-right font-mono text-emerald-600">+₹${interestEarned.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-3 px-5 text-right font-semibold text-slate-900 font-mono">₹${closingValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>`;
-
-                val = closingValue;
+            let rawData;
+            try {
+                rawData = JSON.parse(npsJsonInputEl.value);
+            } catch (e) {
+                alert("Invalid NPS JSON syntax structure parsed.");
+                return;
             }
 
-            tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">Set valid parameters.</td></tr>`;
-            globalNPSFuture = val;
-            document.getElementById('npsHeaderProj').innerText = `₹${globalNPSFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const funds = rawData.nps_funds || {};
+            let rowsHtml = '';
+            let totalNpsSum = 0;
+
+            Object.keys(funds).forEach(key => {
+                const scheme = funds[key];
+                const units = parseFloat(scheme.units) || 0;
+                const nav = parseFloat(scheme.nav) || 0;
+                const currentVal = units * nav;
+                totalNpsSum += currentVal;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3 px-4 font-medium text-slate-900">${scheme.name || key}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-600">${units.toLocaleString('en-IN', { minimumFractionDigits: 4 })}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-600">₹${nav.toFixed(4)}</td>
+                        <td class="py-3 px-4 text-right font-semibold text-slate-900 font-mono">₹${currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`;
+            });
+
+            npsTableBody.innerHTML = rowsHtml || `<tr><td colspan="4" class="py-8 text-center text-slate-400">No NPS assets parsed.</td></tr>`;
+            
+            globalNPSCurrent = totalNpsSum;
+            document.getElementById('npsCurrentValHeader').innerText = `₹${totalNpsSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            // Project forward to retirement year at standard base projection rate (9%)
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
+            const yearsLeft = Math.max(0, rYear - 2026);
+            globalNPSFuture = totalNpsSum * Math.pow(1.09, yearsLeft);
+            document.getElementById('npsProjectedValHeader').innerText = `₹${globalNPSFuture.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            generateRetirementPlan();
             updateGlobalOverview();
         }
 
-        function updateNPSRate(year, value) {
-            const parsedRate = parseFloat(value);
-            npsInterestRates[year] = isNaN(parsedRate) ? 0 : parsedRate;
-            rebuildNPSTable();
-        }
-
-
-        // -------------------- OTHER MODULES --------------------
+        // -------------------- OTHER BALANCES MODULES --------------------
         function calculateLiquid() {
             const currentVal = parseFloat(document.getElementById('liqCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('liqCurrentYear').value) || 2026;
@@ -727,7 +743,6 @@
             updateGlobalOverview();
         }
 
-        // Calculation of other assets
         function calculateOther() {
             const currentVal = parseFloat(document.getElementById('otherCurrentVal').value) || 0;
             const startYear = parseInt(document.getElementById('otherCurrentYear').value) || 2026;
@@ -756,27 +771,7 @@
             updateGlobalOverview();
         }
 
-        // -------------------- MUTUAL FUNDS SYSTEM LOGIC --------------------
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (!parsed.mutual_funds) {
-                        alert("Malformed template: JSON must contain 'mutual_funds' key.");
-                        return;
-                    }
-                    document.getElementById('jsonInput').value = JSON.stringify(parsed, null, 4);
-                    calculatePortfolio(); 
-                } catch (err) {
-                    alert("Parsed stream contains file reading invalidations.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
+        // -------------------- MUTUAL FUNDS LOGIC --------------------
         function downloadJson() {
             const currentText = document.getElementById('jsonInput').value;
             try {
@@ -814,8 +809,7 @@
 
             if (amfiCodes.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-xs">No mutual funds identified.</td></tr>`;
-                const mfCurrentValEl = document.getElementById('mfCurrentVal');
-                if (mfCurrentValEl) mfCurrentValEl.innerText = "₹0.00";
+                document.getElementById('mfCurrentVal').innerText = "₹0.00";
                 globalMFCurrent = 0;
                 globalMFFuture = 0;
                 updateGlobalOverview();
@@ -876,18 +870,12 @@
             });
 
             globalMFCurrent = grandTotal;
-            const rYearEl = document.getElementById('retirementYear');
-            const rYear = rYearEl ? (parseInt(rYearEl.value) || 2043) : 2043;
+            const rYear = parseInt(document.getElementById('retirementYear').value) || 2043;
             const yearsLeft = Math.max(0, rYear - 2026);
             globalMFFuture = grandTotal * Math.pow(1.10, yearsLeft); 
 
-            const mfCurrentValEl = document.getElementById('mfCurrentVal');
-            if (mfCurrentValEl) {
-                mfCurrentValEl.innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-            }
-            if (totalFundsEl) {
-                totalFundsEl.innerText = successCount;
-            }
+            document.getElementById('mfCurrentVal').innerText = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            if (totalFundsEl) totalFundsEl.innerText = successCount;
             
             const lastUpdatedEl = document.getElementById('lastUpdated');
             if (lastUpdatedEl) {
@@ -971,24 +959,18 @@
         // -------------------- GLOBAL STATE IMPORT/EXPORT --------------------
         function exportGlobalState() {
             let mfParsedData = {};
-            try {
-                mfParsedData = JSON.parse(document.getElementById('jsonInput').value);
-            } catch (e) {
-                mfParsedData = initialDataset;
-            }
+            let npsParsedData = {};
+            try { mfParsedData = JSON.parse(document.getElementById('jsonInput').value); } catch(e){}
+            try { npsParsedData = JSON.parse(document.getElementById('npsJsonInput').value); } catch(e){}
 
             const state = {
                 retirementYear: parseInt(document.getElementById('retirementYear').value),
                 mutual_funds_raw: mfParsedData,
+                nps_raw: npsParsedData,
                 epf: {
                     currentVal: parseFloat(document.getElementById('epfCurrentVal').value),
                     currentYear: parseInt(document.getElementById('epfCurrentYear').value),
                     interestRates: epfInterestRates
-                },
-                nps: {
-                    currentVal: parseFloat(document.getElementById('npsCurrentVal').value),
-                    currentYear: parseInt(document.getElementById('npsCurrentYear').value),
-                    interestRates: npsInterestRates
                 },
                 liquid: {
                     currentVal: parseFloat(document.getElementById('liqCurrentVal').value),
@@ -1021,25 +1003,14 @@
                 try {
                     const state = JSON.parse(e.target.result);
                     
-                    // Validate file minimum keys
-                    if (!state.epf || !state.nps || !state.mutual_funds_raw) {
-                        alert("Invalid Global State file format.");
-                        return;
-                    }
-
-                    // Restore state properties to fields safely
                     document.getElementById('retirementYear').value = state.retirementYear || 2043;
-                    document.getElementById('jsonInput').value = JSON.stringify(state.mutual_funds_raw, null, 4);
+                    if (state.mutual_funds_raw) document.getElementById('jsonInput').value = JSON.stringify(state.mutual_funds_raw, null, 4);
+                    if (state.nps_raw) document.getElementById('npsJsonInput').value = JSON.stringify(state.nps_raw, null, 4);
 
                     // Restore EPF
                     document.getElementById('epfCurrentVal').value = state.epf.currentVal;
                     document.getElementById('epfCurrentYear').value = state.epf.currentYear;
                     epfInterestRates = state.epf.interestRates || {};
-
-                    // Restore NPS
-                    document.getElementById('npsCurrentVal').value = state.nps.currentVal;
-                    document.getElementById('npsCurrentYear').value = state.nps.currentYear;
-                    npsInterestRates = state.nps.interestRates || {};
 
                     // Restore Liquid
                     document.getElementById('liqCurrentVal').value = state.liquid.currentVal;
@@ -1051,27 +1022,25 @@
                     document.getElementById('otherCurrentYear').value = state.other.currentYear;
                     document.getElementById('otherInterest').value = state.other.interest;
 
-                    // Re-calculate everything cleanly
                     triggerGlobalRecalculation();
                     calculatePortfolio();
 
                     alert("Application state imported successfully!");
                 } catch (err) {
-                    alert("Unable to parse state JSON file: " + err.message);
+                    alert("Unable to parse state JSON file.");
                 }
             };
             reader.readAsText(file);
         }
 
-        // Run application on start
+        // Run application on boot
         window.addEventListener('DOMContentLoaded', () => {
             calculatePortfolio();
+            calculateNpsPortfolio();
             rebuildEPFTable();
-            rebuildNPSTable();
             calculateLiquid();
             calculateOther();
-            generateRetirementPlan();
-            switchTab('planTab'); // Default to the newly added Retirement Plan tab
+            switchTab('planTab'); 
         });
     </script>
 </body>
